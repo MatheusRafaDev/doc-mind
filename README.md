@@ -28,7 +28,6 @@ Além de atender às necessidades reais de analistas de suporte, consultores e d
   - [LangGraph: Grafo de Estados e Auto-correção](#4-langgraph-grafo-de-estados-e-auto-correção)
 - [📁 Estrutura do Monorepo](#-estrutura-do-monorepo)
 - [⚙️ Configuração das Variáveis de Ambiente](#️-configuração-das-variáveis-de-ambiente)
-- [🚀 Guia de Instalação e Execução](#-guia-de-instalação-e-execução)
 - [📡 Catálogo da API REST e Exemplos cURL](#-catálogo-da-api-rest-e-exemplos-curl)
 - [📊 Modelagem do Banco de Dados (ERD)](#-modelagem-do-banco-de-dados-erd)
 - [🧪 Trilha de Aprendizado em IA (Fases 0 a 11)](#-trilha-de-aprendizado-em-ia-fases-0-a-11)
@@ -262,55 +261,6 @@ NEXT_PUBLIC_SISTEMA_PADRAO="Volpe"
 NEXT_PUBLIC_MODULO_PADRAO="Financeiro"
 NEXT_PUBLIC_VERSAO_PADRAO="2026.1"
 ```
-
----
-
-## 🚀 Guia de Instalação e Execução
-
-### Pré-requisitos
-- **Node.js:** versão 20+ ou 24+
-- **Docker e Docker Compose:** para o PostgreSQL com `pgvector`
-
-### 1. Clonar o Repositório e Instalar Dependências
-```bash
-git clone https://github.com/rafael/doc-mind.git
-cd doc-mind
-
-# Instala as dependências do monorepo (backend e frontend)
-npm run install:all
-```
-
-### 2. Iniciar o Banco de Dados com pgvector
-```bash
-docker compose -f docker/docker-compose.yml up -d
-```
-
-### 3. Executar as Migrações do Banco
-Cria automaticamente a extensão `vector`, as tabelas e os índices:
-```bash
-npm run db:migrate
-```
-
-### 4. Iniciar em Desenvolvimento
-
-Abra dois terminais (ou use o terminal da sua preferência):
-
-**Terminal 1 — Iniciar o Backend:**
-```bash
-npm run dev:backend
-```
-> API online em: `http://localhost:3000`  
-> Documentação interativa Swagger: 👉 **`http://localhost:3000/docs`**
-
-**Terminal 2 — Iniciar o Frontend Visual:**
-```bash
-npm run dev:frontend
-```
-> Interface Web do Usuário: 👉 **`http://localhost:3001`**
-
-### 5. Scripts Úteis na Raiz
-- `npm test`: Executa os testes de integração das rotas do backend.
-- `npm run build`: Compila o backend com `tsc` e o frontend com `next build` para produção.
 
 ---
 
