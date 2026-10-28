@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "skipLibCheck": true,
+    "strict": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true
+  },
+  "include": [
+    "backend/src/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "backend/node_modules",
+    "frontend",
+    "**/dist",
+    "**/.next"
+  ]
+}
+

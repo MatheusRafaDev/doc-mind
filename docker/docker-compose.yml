@@ -1,0 +1,22 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: docmind-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: docmind
+      POSTGRES_PASSWORD: docmind123
+      POSTGRES_DB: docmind
+    ports:
+      # Se você já tiver um PostgreSQL local rodando na porta 5432, altere para "5433:5432" e ajuste a DATABASE_URL no .env
+      - "5432:5432"
+    volumes:
+      - pgvector_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U docmind -d docmind"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgvector_data:

@@ -1,0 +1,27 @@
+{
+  "name": "doc-mind",
+  "version": "1.0.0",
+  "description": "DocMind — Intelligent Assistant for ERP Documentation (Backend & Frontend Monorepo)",
+  "private": true,
+  "scripts": {
+    "dev:backend": "npm --prefix backend run dev",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "build:backend": "npm --prefix backend run build",
+    "build:frontend": "npm --prefix frontend run build",
+    "build": "npm run build:backend && npm run build:frontend",
+    "test:backend": "npm --prefix backend test",
+    "test": "npm run test:backend",
+    "db:migrate": "npm --prefix backend run db:migrate",
+    "install:all": "npm install --prefix backend && npm install --prefix frontend"
+  },
+  "keywords": [
+    "erp",
+    "rag",
+    "nextjs",
+    "fastify",
+    "pgvector",
+    "langgraph"
+  ],
+  "author": "",
+  "license": "MIT"
+}
