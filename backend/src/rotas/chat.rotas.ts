@@ -1,9 +1,32 @@
+/**
+ * ============================================================================
+ * 💬 ROTAS DE CHAT RAG (backend/src/rotas/chat.rotas.ts)
+ * ============================================================================
+ * 
+ * 📍 PAPEL NO SISTEMA:
+ * Expõe o endpoint conversacional `/api/v1/chat` para perguntas e respostas
+ * ancoradas em manuais e histórico da conversa.
+ * 
+ * 🔄 QUEM CHAMA:
+ * - A tela principal de chat em `frontend/src/app/page.tsx`
+ * - A função `enviarPerguntaChat()` em `frontend/src/lib/api.ts`
+ * 
+ * ➡️ QUEM ESTE ARQUIVO CHAMA:
+ * - `ServicoChat` em `src/modulos/chat/servico.chat.ts`
+ * ============================================================================
+ */
+
 import { FastifyInstance } from 'fastify';
 import { ServicoChat } from '../modulos/chat/servico.chat.js';
 
 export async function rotasChat(app: FastifyInstance) {
   const servicoChat = new ServicoChat();
 
+  /**
+   * POST /api/v1/chat
+   * Envia uma pergunta sobre o ERP, recupera trechos no pgvector, monta o contexto
+   * com páginas e gera a resposta fundamentada com o LLM.
+   */
   app.post(
     '/',
     {
@@ -36,6 +59,10 @@ export async function rotasChat(app: FastifyInstance) {
     }
   );
 
+  /**
+   * GET /api/v1/chat/:conversaId/historico
+   * Retorna todas as mensagens trocadas em uma conversa e as fontes associadas.
+   */
   app.get(
     '/:conversaId/historico',
     {
@@ -56,4 +83,3 @@ export async function rotasChat(app: FastifyInstance) {
     }
   );
 }
-

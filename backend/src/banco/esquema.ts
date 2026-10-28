@@ -1,8 +1,33 @@
+/**
+ * ============================================================================
+ * 📊 ESQUEMA DAS TABELAS & PGVECTOR (backend/src/banco/esquema.ts)
+ * ============================================================================
+ * 
+ * 📍 PAPEL NO SISTEMA:
+ * Define todas as tabelas relacionais e a coluna vetorial `vector(768)`
+ * gerenciadas pelo Drizzle ORM no PostgreSQL:
+ * 
+ * 1. `documentos`: Metadados do manual (título, sistema, módulo, versão, caminho do arquivo).
+ * 2. `fragmentos_documentos`: Chunks de texto com o número da página e o vetor do pgvector.
+ * 3. `conversas`: Sessões de chat agrupadas por assunto.
+ * 4. `mensagens`: Histórico de mensagens com o array JSON de fontes consultadas.
+ * 5. `diagnosticos`: Registros estruturados gerados pelo LangGraph (fatos, hipóteses, passos).
+ * 6. `lacunas_conhecimento`: Dúvidas para as quais o manual não continha resposta suficiente.
+ * ============================================================================
+ */
+
 import { pgTable, uuid, varchar, text, timestamp, integer, jsonb, customType } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { ambiente } from '../configuracao/ambiente.js';
 
-// Tipo customizado para a coluna vector do pgvector
+/**
+ * ============================================================================
+ * 📐 TIPO CUSTOMIZADO PGVECTOR (tipoVetorPg)
+ * ============================================================================
+ * Mapeia um array TypeScript `number[]` para o tipo nativo `vector(N)` do pgvector.
+ * - toDriver: Converte `[0.1, 0.2, ...]` em string `"[0.1,0.2,...]"` que o PostgreSQL entende.
+ * - fromDriver: Lê a string do PostgreSQL e devolve um array numérico puro.
+ */
 export const tipoVetorPg = customType<{
   data: number[];
   driverData: string;
@@ -22,6 +47,7 @@ export const tipoVetorPg = customType<{
   },
 });
 
+// 1. Tabela de Documentos / Manuais
 export const documentos = pgTable('documentos', {
   id: uuid('id').primaryKey().defaultRandom(),
   titulo: varchar('titulo', { length: 255 }).notNull(),
@@ -39,6 +65,7 @@ export const documentos = pgTable('documentos', {
   atualizadoEm: timestamp('atualizado_em').defaultNow().notNull(),
 });
 
+// 2. Tabela de Fragmentos (Chunks) com Vetor do pgvector
 export const fragmentosDocumentos = pgTable('fragmentos_documentos', {
   id: uuid('id').primaryKey().defaultRandom(),
   documentoId: uuid('documento_id')
@@ -46,13 +73,14 @@ export const fragmentosDocumentos = pgTable('fragmentos_documentos', {
     .references(() => documentos.id, { onDelete: 'cascade' }),
   indiceFragmento: integer('indice_fragmento').notNull(),
   conteudo: text('conteudo').notNull(),
-  numeroPagina: integer('numero_pagina'), // Página de onde o fragmento foi extraído
+  numeroPagina: integer('numero_pagina'), // Página de onde o fragmento foi extraído no PDF
   tituloCapitulo: varchar('titulo_capitulo', { length: 255 }),
-  vetor: tipoVetorPg('vetor', { dimensoes: ambiente.DIMENSAO_VETOR }),
+  vetor: tipoVetorPg('vetor', { dimensoes: ambiente.DIMENSAO_VETOR }), // Coluna vetorial
   metadados: jsonb('metadados').default({}),
   criadoEm: timestamp('criado_em').defaultNow().notNull(),
 });
 
+// 3. Tabela de Sessões de Conversa
 export const conversas = pgTable('conversas', {
   id: uuid('id').primaryKey().defaultRandom(),
   titulo: varchar('titulo', { length: 255 }).notNull(),
@@ -63,6 +91,7 @@ export const conversas = pgTable('conversas', {
   atualizadoEm: timestamp('atualizado_em').defaultNow().notNull(),
 });
 
+// 4. Tabela de Mensagens do Chat RAG
 export const mensagens = pgTable('mensagens', {
   id: uuid('id').primaryKey().defaultRandom(),
   conversaId: uuid('conversa_id')
@@ -74,6 +103,7 @@ export const mensagens = pgTable('mensagens', {
   criadoEm: timestamp('criado_em').defaultNow().notNull(),
 });
 
+// 5. Tabela de Diagnósticos Técnicos (LangGraph)
 export const diagnosticos = pgTable('diagnosticos', {
   id: uuid('id').primaryKey().defaultRandom(),
   sistema: varchar('sistema', { length: 100 }).notNull(),
@@ -89,6 +119,7 @@ export const diagnosticos = pgTable('diagnosticos', {
   criadoEm: timestamp('criado_em').defaultNow().notNull(),
 });
 
+// 6. Tabela de Lacunas de Conhecimento (Perguntas sem resposta nos manuais)
 export const lacunasConhecimento = pgTable('lacunas_conhecimento', {
   id: uuid('id').primaryKey().defaultRandom(),
   pergunta: text('pergunta').notNull(),
@@ -99,7 +130,7 @@ export const lacunasConhecimento = pgTable('lacunas_conhecimento', {
   criadoEm: timestamp('criado_em').defaultNow().notNull(),
 });
 
-// Relações entre tabelas
+// Definição de Relações (para queries com Drizzle relational queries)
 export const relacoesDocumentos = relations(documentos, ({ many }) => ({
   fragmentos: many(fragmentosDocumentos),
 }));
@@ -121,4 +152,3 @@ export const relacoesMensagens = relations(mensagens, ({ one }) => ({
     references: [conversas.id],
   }),
 }));
-

@@ -1,3 +1,20 @@
+/**
+ * ============================================================================
+ * 🔄 SCRIPT DE MIGRAÇÃO SQL (backend/src/banco/migrar.ts)
+ * ============================================================================
+ * 
+ * 📍 PAPEL NO SISTEMA:
+ * Executa comandos DDL no PostgreSQL para:
+ * 1. Ativar a extensão nativa `vector` (`CREATE EXTENSION IF NOT EXISTS vector;`).
+ * 2. Criar todas as 6 tabelas relacionais caso não existam.
+ * 3. Criar índices para acelerar a busca vetorial e buscas por sistema/módulo.
+ * 
+ * 🔄 COMO É EXECUTADO:
+ * - Automaticamente na inicialização do servidor em `src/server.ts`.
+ * - Ou manualmente via terminal: `npm run db:migrate`.
+ * ============================================================================
+ */
+
 import pg from 'pg';
 import { ambiente } from '../configuracao/ambiente.js';
 
@@ -14,11 +31,11 @@ export async function executarMigracoes() {
   try {
     await cliente.query('BEGIN');
 
-    // 1. Habilita a extensão pgvector
+    // 1. Habilita a extensão pgvector para permitir o tipo vector(N) e operador <=>
     await cliente.query('CREATE EXTENSION IF NOT EXISTS vector;');
     console.log('✅ Extensão pgvector habilitada com sucesso.');
 
-    // 2. Tabela de documentos
+    // 2. Tabela de documentos / manuais
     await cliente.query(`
       CREATE TABLE IF NOT EXISTS documentos (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -38,7 +55,7 @@ export async function executarMigracoes() {
       );
     `);
 
-    // 3. Tabela de fragmentos com coluna vetorial
+    // 3. Tabela de fragmentos com coluna vetorial vector(768)
     await cliente.query(`
       CREATE TABLE IF NOT EXISTS fragmentos_documentos (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -53,7 +70,7 @@ export async function executarMigracoes() {
       );
     `);
 
-    // 4. Índices para busca
+    // 4. Índices para acelerar queries por documento e filtros por ERP
     await cliente.query(`
       CREATE INDEX IF NOT EXISTS idx_fragmentos_doc_id ON fragmentos_documentos(documento_id);
       CREATE INDEX IF NOT EXISTS idx_documentos_sistema_modulo ON documentos(sistema, modulo, versao);
@@ -127,11 +144,10 @@ export async function executarMigracoes() {
   }
 }
 
-// Execução direta via CLI
+// Execução direta via CLI (quando chamado com `npm run db:migrate`)
 if (process.argv[1]?.endsWith('migrar.ts') || process.argv[1]?.endsWith('migrar.js')) {
   executarMigracoes().catch((err) => {
     console.error(err);
     process.exit(1);
   });
 }
-

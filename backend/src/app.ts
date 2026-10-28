@@ -1,3 +1,27 @@
+/**
+ * ============================================================================
+ * 🏗️ FÁBRICA DA APLICAÇÃO FASTIFY (backend/src/app.ts)
+ * ============================================================================
+ * 
+ * 📍 PAPEL NO SISTEMA:
+ * Este arquivo reúne e registra todos os plugins, middlewares e controladores da API:
+ * - CORS (para permitir que o frontend Next.js acesse a API sem bloqueios)
+ * - Multipart (para receber uploads de arquivos PDF/TXT/MD de até 50MB)
+ * - Swagger / OpenAPI (para gerar a documentação interativa em `/docs`)
+ * - Rota de integridade `/saude`
+ * - Todas as rotas de negócio:
+ *   - `/api/v1/documentos` (em `src/rotas/documentos.rotas.ts`)
+ *   - `/api/v1/busca` (em `src/rotas/busca.rotas.ts`)
+ *   - `/api/v1/chat` (em `src/rotas/chat.rotas.ts`)
+ *   - `/api/v1/diagnostico` (em `src/rotas/diagnostico.rotas.ts`)
+ *   - `/api/v1/metricas` (em `src/rotas/metricas.rotas.ts`)
+ * 
+ * 🔄 QUEM CHAMA:
+ * - `backend/src/server.ts` (ao subir o servidor)
+ * - `backend/src/testar-api.ts` (ao rodar testes automatizados com `app.inject()`)
+ * ============================================================================
+ */
+
 import fastify from 'fastify';
 import cors from '@fastify/cors';
 import multipart from '@fastify/multipart';
@@ -16,19 +40,19 @@ export async function criarAplicacao() {
     logger: true,
   });
 
-  // 1. CORS
+  // 1. CORS: Permite que navegadores e o Next.js façam requisições cross-origin
   await app.register(cors, {
     origin: '*',
   });
 
-  // 2. Multipart (Uploads até 50MB)
+  // 2. Multipart: Habilita recebimento de formulários multipart com arquivos até 50MB
   await app.register(multipart, {
     limits: {
       fileSize: 50 * 1024 * 1024,
     },
   });
 
-  // 3. Documentação Swagger / OpenAPI
+  // 3. Documentação Swagger / OpenAPI 3.0 gerada automaticamente
   await app.register(swagger, {
     openapi: {
       info: {
@@ -47,12 +71,13 @@ export async function criarAplicacao() {
         { name: 'Documentos', description: 'Ingestão, metadados e ciclo de vida de manuais' },
         { name: 'Pesquisa Técnica', description: 'Busca híbrida combinando vetores e texto' },
         { name: 'Chat RAG', description: 'Perguntas e respostas fundamentadas com fontes e páginas' },
-        { name: 'Diagnóstico Técnico', description: 'Investigação e classificação de erros e logs' },
+        { name: 'Diagnóstico Técnico', description: 'Investigação e classificação de erros e logs via LangGraph' },
         { name: 'Métricas & Governança', description: 'Monitoramento e lacunas de documentação' },
       ],
     },
   });
 
+  // Interface visual interativa Swagger UI acessível em http://localhost:3000/docs
   await app.register(swaggerUi, {
     routePrefix: '/docs',
     uiConfig: {
@@ -61,7 +86,7 @@ export async function criarAplicacao() {
     },
   });
 
-  // 4. Verificação de Saúde
+  // 4. Endpoint de Saúde do Sistema (/saude e alias /health)
   app.get(
     '/saude',
     {
@@ -84,7 +109,6 @@ export async function criarAplicacao() {
     }
   );
 
-  // Alias para /health
   app.get('/health', async () => {
     const statusBanco = await verificarConexaoBanco();
     return {
@@ -98,7 +122,7 @@ export async function criarAplicacao() {
     };
   });
 
-  // 5. Registro de Rotas da API em Português
+  // 5. Registro de Rotas de Negócio em Português
   await app.register(rotasDocumentos, { prefix: '/api/v1/documentos' });
   await app.register(rotasBusca, { prefix: '/api/v1/busca' });
   await app.register(rotasChat, { prefix: '/api/v1/chat' });

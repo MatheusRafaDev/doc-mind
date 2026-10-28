@@ -1,9 +1,32 @@
+/**
+ * ============================================================================
+ * 📚 ROTAS DE DOCUMENTOS (backend/src/rotas/documentos.rotas.ts)
+ * ============================================================================
+ * 
+ * 📍 PAPEL NO SISTEMA:
+ * Define os endpoints HTTP REST para upload, listagem e exclusão de manuais.
+ * 
+ * 🔄 QUEM CHAMA:
+ * - O frontend em `frontend/src/lib/api.ts` (`uploadDocumento`, `listarDocumentos`, `excluirDocumento`)
+ * - A tela visual em `frontend/src/app/documentos/page.tsx`
+ * - Ou requisições cURL / Swagger em `/docs`
+ * 
+ * ➡️ QUEM ESTE ARQUIVO CHAMA:
+ * - `ServicoDocumentos` em `src/modulos/documentos/servico.documentos.ts`
+ * ============================================================================
+ */
+
 import { FastifyInstance } from 'fastify';
 import { ServicoDocumentos } from '../modulos/documentos/servico.documentos.js';
 
 export async function rotasDocumentos(app: FastifyInstance) {
   const servicoDocumentos = new ServicoDocumentos();
 
+  /**
+   * POST /api/v1/documentos/upload
+   * Recebe um arquivo multipart (PDF, TXT ou MD) com título, sistema, módulo e versão.
+   * Aciona a extração de texto por página, o chunking e a gravação de vetores no pgvector.
+   */
   app.post(
     '/upload',
     {
@@ -42,6 +65,7 @@ export async function rotasDocumentos(app: FastifyInstance) {
         });
       }
 
+      // Chama o caso de uso de ingestão
       const resultado = await servicoDocumentos.uploadEIngestao({
         titulo,
         sistema,
@@ -57,6 +81,10 @@ export async function rotasDocumentos(app: FastifyInstance) {
     }
   );
 
+  /**
+   * GET /api/v1/documentos
+   * Retorna todos os manuais cadastrados com filtros opcionais por sistema, módulo ou versão.
+   */
   app.get(
     '/',
     {
@@ -80,6 +108,10 @@ export async function rotasDocumentos(app: FastifyInstance) {
     }
   );
 
+  /**
+   * GET /api/v1/documentos/:id
+   * Retorna detalhes de um manual e a lista de seus fragmentos de texto gerados.
+   */
   app.get(
     '/:id',
     {
@@ -104,6 +136,10 @@ export async function rotasDocumentos(app: FastifyInstance) {
     }
   );
 
+  /**
+   * DELETE /api/v1/documentos/:id
+   * Exclui o arquivo físico e remove em cascata todos os fragmentos e vetores do pgvector.
+   */
   app.delete(
     '/:id',
     {
@@ -128,4 +164,3 @@ export async function rotasDocumentos(app: FastifyInstance) {
     }
   );
 }
-

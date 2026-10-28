@@ -1,9 +1,31 @@
+/**
+ * ============================================================================
+ * 🔎 ROTAS DE PESQUISA TÉCNICA (backend/src/rotas/busca.rotas.ts)
+ * ============================================================================
+ * 
+ * 📍 PAPEL NO SISTEMA:
+ * Expõe o endpoint de Busca Híbrida (`/api/v1/busca/hibrida`).
+ * 
+ * 🔄 QUEM CHAMA:
+ * - A tela de pesquisa em `frontend/src/app/busca/page.tsx`
+ * - A função `executarBuscaHibrida()` em `frontend/src/lib/api.ts`
+ * 
+ * ➡️ QUEM ESTE ARQUIVO CHAMA:
+ * - `ServicoBusca` em `src/modulos/busca/servico.busca.ts`
+ * ============================================================================
+ */
+
 import { FastifyInstance } from 'fastify';
 import { ServicoBusca } from '../modulos/busca/servico.busca.js';
 
 export async function rotasBusca(app: FastifyInstance) {
   const servicoBusca = new ServicoBusca();
 
+  /**
+   * POST /api/v1/busca/hibrida
+   * Recebe um termo de busca e filtros de ERP e devolve os melhores fragmentos
+   * ordenados por pontuação composta (75% cosseno vetorial + 25% texto ILIKE).
+   */
   app.post(
     '/hibrida',
     {
@@ -36,4 +58,3 @@ export async function rotasBusca(app: FastifyInstance) {
     }
   );
 }
-
