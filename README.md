@@ -152,9 +152,13 @@ flowchart TD
 - **Conceito:** Armazena os vetores no PostgreSQL em colunas do tipo `vector(768)`.
 - **Cálculo da Similaridade de Cosseno:**
   No PostgreSQL, o operador `<=>` calcula a distância de cosseno:
-  $$\text{Similaridade} = 1 - (\text{f.vetor} \Leftrightarrow \text{vetor\_consulta})$$
+  ```text
+  Similaridade = 1 - (f.vetor <=> vetor_consulta)
+  ```
 - **Pontuação Composta (Busca Híbrida):**
-  $$\text{Score Final} = (0.75 \times \text{Similaridade Vetorial}) + (0.25 \times \text{Correspondência Lexical ILIKE})$$
+  ```text
+  Score Final = (0.75 * Similaridade Vetorial) + (0.25 * Correspondência Lexical ILIKE)
+  ```
 - **Onde ocorre no código:** [`backend/src/modulos/busca/servico.busca.ts`](file:///c:/Users/rafae/Documents/GitHub/doc-mind/backend/src/modulos/busca/servico.busca.ts).
 
 ### 3. RAG Fundamentado com Citação de Páginas

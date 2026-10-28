@@ -147,8 +147,8 @@ flowchart TD
     Embed --> SQL["Monta Query Híbrida no PostgreSQL"]
 
     subgraph Pontuacao ["Cálculo da Pontuação Composta"]
-        VScore["Score Vetorial (75%)\n1 - (f.vetor <=> $1::vector)"]
-        LScore["Score Lexical (25%)\nCASE WHEN f.conteudo ILIKE $2 THEN 0.25 ELSE 0 END"]
+        VScore["Score Vetorial (75%)\n1 - (f.vetor <=> vetor_param::vector)"]
+        LScore["Score Lexical (25%)\nCASE WHEN f.conteudo ILIKE termo_param THEN 0.25 ELSE 0 END"]
         Comb["Pontuação Final = Score Vetorial + Score Lexical"]
         VScore --> Comb
         LScore --> Comb
