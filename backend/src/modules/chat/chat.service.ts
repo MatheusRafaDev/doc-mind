@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { eq, desc } from 'drizzle-orm';
 import { banco } from '../../database/index.js';
 import { conversas, mensagens, lacunasConhecimento } from '../../database/schema.js';
 import { ServicoBusca } from '../search/search.service.js';
@@ -173,6 +173,14 @@ Diretrizes fundamentais:
       .from(mensagens)
       .where(eq(mensagens.conversaId, conversaId))
       .orderBy(mensagens.criadoEm);
+  }
+
+  async listarConversas(limite = 20) {
+    return banco
+      .select()
+      .from(conversas)
+      .orderBy(desc(conversas.criadoEm))
+      .limit(limite);
   }
 }
 

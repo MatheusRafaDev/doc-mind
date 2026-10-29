@@ -139,6 +139,32 @@ export async function enviarPerguntaChat(dados: {
 }
 
 /**
+ * Obtém o histórico completo de mensagens de uma conversa (GET /api/v1/chat/:conversaId/historico).
+ */
+export async function obterHistoricoChat(conversaId: string): Promise<any[]> {
+  const res = await fetch(`${URL_API}/api/v1/chat/${conversaId}/historico`, {
+    cache: 'no-store',
+  });
+  if (!res.ok) throw new Error('Falha ao carregar histórico da conversa.');
+  return res.json();
+}
+
+/**
+ * Lista as últimas conversas ativas no sistema (GET /api/v1/chat/conversas).
+ */
+export async function listarConversasChat(): Promise<any[]> {
+  try {
+    const res = await fetch(`${URL_API}/api/v1/chat/conversas`, {
+      cache: 'no-store',
+    });
+    if (!res.ok) return [];
+    return res.json();
+  } catch {
+    return [];
+  }
+}
+
+/**
  * Executa pesquisa híbrida técnica (vetorial + palavras-chave) nos manuais (POST /api/v1/busca/hibrida).
  */
 export async function executarBuscaHibrida(dados: {

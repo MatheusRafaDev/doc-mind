@@ -60,6 +60,24 @@ export async function rotasChat(app: FastifyInstance) {
   );
 
   /**
+   * GET /api/v1/chat/conversas
+   * Retorna a lista das últimas conversas ativas no sistema.
+   */
+  app.get(
+    '/conversas',
+    {
+      schema: {
+        summary: 'Listar conversas recentes',
+        description: 'Retorna a lista das últimas sessões de chat gravadas no banco.',
+        tags: ['Chat RAG'],
+      },
+    },
+    async () => {
+      return servicoChat.listarConversas();
+    }
+  );
+
+  /**
    * GET /api/v1/chat/:conversaId/historico
    * Retorna todas as mensagens trocadas em uma conversa e as fontes associadas.
    */

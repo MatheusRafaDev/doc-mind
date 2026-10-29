@@ -438,3 +438,4 @@ function VisualizadorImagem({
     </div>
   );
 }
+

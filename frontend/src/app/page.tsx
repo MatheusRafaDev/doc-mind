@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Send,
   Sparkles,
@@ -12,12 +12,29 @@ import {
   SlidersHorizontal,
   ChevronDown,
   ChevronUp,
-  Cpu,
+  RotateCcw,
+  History,
+  MessageSquare,
+  Plus,
+  Clock,
+  X,
   Layers,
 } from 'lucide-react';
-import { enviarPerguntaChat } from '../lib/api';
+import { enviarPerguntaChat, obterHistoricoChat, listarConversasChat } from '../lib/api';
 import { MensagemChat, FonteConsultada } from '../lib/types';
 import MarkdownRenderer from '../components/MarkdownRenderer';
+
+const STORAGE_KEY = 'docmind_active_chat_v1';
+
+const MENSAGEM_BOAS_VINDAS: MensagemChat = {
+  id: 'boas-vindas',
+  papel: 'assistente',
+  conteudo: `Olá! Sou o assistente de conhecimento técnico do **DocMind**.
+Posso tirar dúvidas sobre parametrizações, APIs, integrações e procedimentos operacionais com base estritamente nos **manuais cadastrados**.
+
+Todas as minhas respostas citam o **manual, capítulo e página de origem**. Como posso ajudar você hoje?`,
+  horario: 'Agora',
+};
 
 const perguntasSugeridas = [
   'Como funciona o processo de importação de notas fiscais no ERP?',
@@ -36,17 +53,116 @@ export default function PaginaChat() {
   const [carregando, setCarregando] = useState(false);
   const [fonteExpandidaIdx, setFonteExpandidaIdx] = useState<string | null>(null);
 
-  const [mensagens, setMensagens] = useState<MensagemChat[]>([
-    {
-      id: 'boas-vindas',
-      papel: 'assistente',
-      conteudo: `Olá! Sou o assistente de conhecimento técnico do **DocMind**.
-Posso tirar dúvidas sobre parametrizações, APIs, integrações e procedimentos operacionais com base estritamente nos **manuais cadastrados**.
+  const [mensagens, setMensagens] = useState<MensagemChat[]>([MENSAGEM_BOAS_VINDAS]);
+  const [historicoModalAberto, setHistoricoModalAberto] = useState(false);
+  const [conversasSalvas, setConversasSalvas] = useState<any[]>([]);
+  const [carregandoHistorico, setCarregandoHistorico] = useState(false);
 
-Todas as minhas respostas citam o **manual, capítulo e página de origem**. Como posso ajudar você hoje?`,
+  const finalMensagensRef = useRef<HTMLDivElement>(null);
+
+  // 1. Restaura o estado da sessão anterior ao carregar a página (não limpa ao sair!)
+  useEffect(() => {
+    try {
+      const salvo = localStorage.getItem(STORAGE_KEY);
+      if (salvo) {
+        const dados = JSON.parse(salvo);
+        if (dados.mensagens && dados.mensagens.length > 0) {
+          setMensagens(dados.mensagens);
+        }
+        if (dados.conversaId) setConversaId(dados.conversaId);
+        if (dados.sistema) setSistema(dados.sistema);
+        if (dados.modulo) setModulo(dados.modulo);
+        if (dados.versao) setVersao(dados.versao);
+      }
+    } catch (e) {
+      console.warn('Erro ao restaurar sessão de chat:', e);
+    }
+  }, []);
+
+  // 2. Persiste automaticamente o estado atual no localStorage para continuar de onde parou
+  useEffect(() => {
+    if (mensagens.length > 0) {
+      try {
+        localStorage.setItem(
+          STORAGE_KEY,
+          JSON.stringify({
+            conversaId,
+            mensagens,
+            sistema,
+            modulo,
+            versao,
+          })
+        );
+      } catch (e) {
+        console.warn('Erro ao salvar sessão de chat:', e);
+      }
+    }
+  }, [mensagens, conversaId, sistema, modulo, versao]);
+
+  // 3. Scroll suave para o fim ao receber nova mensagem
+  useEffect(() => {
+    finalMensagensRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [mensagens, carregando]);
+
+  // Função para iniciar uma nova conversa explicitamente
+  function handleNovoChat() {
+    setConversaId(undefined);
+    const msgInicial = {
+      ...MENSAGEM_BOAS_VINDAS,
       horario: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    },
-  ]);
+    };
+    setMensagens([msgInicial]);
+    try {
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({
+          conversaId: undefined,
+          mensagens: [msgInicial],
+          sistema,
+          modulo,
+          versao,
+        })
+      );
+    } catch {}
+  }
+
+  // Abre modal de histórico com sessões salvas no PostgreSQL
+  async function abrirHistorico() {
+    setHistoricoModalAberto(true);
+    setCarregandoHistorico(true);
+    try {
+      const lista = await listarConversasChat();
+      setConversasSalvas(lista);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setCarregandoHistorico(false);
+    }
+  }
+
+  // Carrega uma conversa anterior salva no banco
+  async function carregarConversaAnterior(cId: string) {
+    try {
+      setCarregando(true);
+      const msgsBanco = await obterHistoricoChat(cId);
+      if (msgsBanco && msgsBanco.length > 0) {
+        const msgsFormatadas: MensagemChat[] = msgsBanco.map((m: any) => ({
+          id: m.id,
+          papel: m.papel,
+          conteudo: m.conteudo,
+          fontes: m.fontes || [],
+          horario: new Date(m.criadoEm).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        }));
+        setConversaId(cId);
+        setMensagens(msgsFormatadas);
+        setHistoricoModalAberto(false);
+      }
+    } catch (e) {
+      console.error('Erro ao carregar histórico:', e);
+    } finally {
+      setCarregando(false);
+    }
+  }
 
   async function handleEnviar(textoEnviar?: string) {
     const texto = textoEnviar || pergunta;
@@ -107,46 +223,76 @@ Todas as minhas respostas citam o **manual, capítulo e página de origem**. Com
 
   return (
     <div className="flex flex-col h-screen max-h-screen">
-      {/* Barra de Filtros e Contexto ERP */}
+      {/* Barra de Filtros, Estado da Conversa e Controles */}
       <header className="bg-slate-900 border-b border-slate-800 px-6 py-3 flex flex-wrap items-center justify-between gap-4 shrink-0 shadow-sm">
-        <div className="flex items-center gap-2 text-sm text-slate-300 font-medium">
-          <SlidersHorizontal className="w-4 h-4 text-blue-400" />
-          <span>Filtro de Contexto ERP:</span>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 text-sm text-slate-300 font-medium">
+            <SlidersHorizontal className="w-4 h-4 text-blue-400" />
+            <span>Contexto ERP:</span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 bg-slate-800/80 px-2.5 py-1 rounded-md border border-slate-700/60 text-xs">
+              <span className="text-slate-400">Sistema:</span>
+              <input
+                type="text"
+                value={sistema}
+                onChange={(e) => setSistema(e.target.value)}
+                className="bg-transparent text-white font-medium focus:outline-none w-20"
+                placeholder="Ex: Volpe"
+              />
+            </div>
+
+            <div className="flex items-center gap-1.5 bg-slate-800/80 px-2.5 py-1 rounded-md border border-slate-700/60 text-xs">
+              <span className="text-slate-400">Módulo:</span>
+              <input
+                type="text"
+                value={modulo}
+                onChange={(e) => setModulo(e.target.value)}
+                className="bg-transparent text-white font-medium focus:outline-none w-24"
+                placeholder="Ex: Financeiro"
+              />
+            </div>
+
+            <div className="flex items-center gap-1.5 bg-slate-800/80 px-2.5 py-1 rounded-md border border-slate-700/60 text-xs">
+              <span className="text-slate-400">Versão:</span>
+              <input
+                type="text"
+                value={versao}
+                onChange={(e) => setVersao(e.target.value)}
+                className="bg-transparent text-white font-medium focus:outline-none w-16 font-mono"
+                placeholder="Ex: 2026.1"
+              />
+            </div>
+          </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5 bg-slate-800/80 px-2.5 py-1 rounded-md border border-slate-700/60 text-xs">
-            <span className="text-slate-400">Sistema:</span>
-            <input
-              type="text"
-              value={sistema}
-              onChange={(e) => setSistema(e.target.value)}
-              className="bg-transparent text-white font-medium focus:outline-none w-20"
-              placeholder="Ex: Volpe"
-            />
-          </div>
+        {/* Botões de Controle da Sessão (Novo Chat & Histórico) */}
+        <div className="flex items-center gap-2">
+          {conversaId && (
+            <span className="text-[11px] text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full font-mono flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              Sessão Ativa
+            </span>
+          )}
 
-          <div className="flex items-center gap-1.5 bg-slate-800/80 px-2.5 py-1 rounded-md border border-slate-700/60 text-xs">
-            <span className="text-slate-400">Módulo:</span>
-            <input
-              type="text"
-              value={modulo}
-              onChange={(e) => setModulo(e.target.value)}
-              className="bg-transparent text-white font-medium focus:outline-none w-24"
-              placeholder="Ex: Financeiro"
-            />
-          </div>
+          <button
+            onClick={abrirHistorico}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg text-xs font-medium transition-colors border border-slate-700/60"
+            title="Ver conversas anteriores salvas no banco"
+          >
+            <History className="w-3.5 h-3.5 text-blue-400" />
+            <span>Histórico</span>
+          </button>
 
-          <div className="flex items-center gap-1.5 bg-slate-800/80 px-2.5 py-1 rounded-md border border-slate-700/60 text-xs">
-            <span className="text-slate-400">Versão:</span>
-            <input
-              type="text"
-              value={versao}
-              onChange={(e) => setVersao(e.target.value)}
-              className="bg-transparent text-white font-medium focus:outline-none w-16 font-mono"
-              placeholder="Ex: 2026.1"
-            />
-          </div>
+          <button
+            onClick={handleNovoChat}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-medium transition-colors shadow-sm"
+            title="Iniciar nova conversa do zero"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>Novo Chat</span>
+          </button>
         </div>
       </header>
 
@@ -291,6 +437,8 @@ Todas as minhas respostas citam o **manual, capítulo e página de origem**. Com
             </div>
           </div>
         )}
+
+        <div ref={finalMensagensRef} />
       </div>
 
       {/* Sugestões de Perguntas Rápidas */}
@@ -341,6 +489,81 @@ Todas as minhas respostas citam o **manual, capítulo e página de origem**. Com
           </button>
         </form>
       </footer>
+
+      {/* MODAL DE HISTÓRICO DE SESSÕES ANTERIORES */}
+      {historicoModalAberto && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg max-h-[80vh] flex flex-col shadow-2xl overflow-hidden">
+            <div className="flex items-center justify-between px-5 py-4 bg-slate-950 border-b border-slate-800">
+              <div className="flex items-center gap-2">
+                <History className="w-4 h-4 text-blue-400" />
+                <h3 className="text-sm font-semibold text-white">Sessões de Conversa Anteriores</h3>
+              </div>
+              <button
+                onClick={() => setHistoricoModalAberto(false)}
+                className="p-1 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-4 space-y-2">
+              {carregandoHistorico ? (
+                <div className="text-center py-8 text-xs text-slate-400 flex items-center justify-center gap-2">
+                  <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                  <span>Carregando sessões gravadas no PostgreSQL...</span>
+                </div>
+              ) : conversasSalvas.length === 0 ? (
+                <div className="text-center py-8 text-xs text-slate-500">
+                  Nenhuma conversa gravada anteriormente no banco.
+                </div>
+              ) : (
+                conversasSalvas.map((c) => (
+                  <button
+                    key={c.id}
+                    onClick={() => carregarConversaAnterior(c.id)}
+                    className={`w-full text-left p-3 rounded-xl border transition-all flex flex-col gap-1.5 ${
+                      conversaId === c.id
+                        ? 'bg-blue-600/10 border-blue-500/40 text-blue-200'
+                        : 'bg-slate-950 hover:bg-slate-800/60 border-slate-800 text-slate-300'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-semibold text-white truncate max-w-[320px]">
+                        {c.titulo || 'Conversa sem título'}
+                      </span>
+                      <span className="text-[10px] text-slate-500 font-mono">
+                        {new Date(c.criadoEm).toLocaleDateString([], { day: '2-digit', month: '2-digit' })}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2 text-[10px] text-slate-400">
+                      <span className="bg-slate-800 px-1.5 py-0.5 rounded text-slate-300">
+                        {c.sistema || 'ERP'}
+                      </span>
+                      {c.modulo && <span>• {c.modulo}</span>}
+                      {c.versao && <span className="font-mono">({c.versao})</span>}
+                      {conversaId === c.id && (
+                        <span className="ml-auto text-emerald-400 font-medium">Conversa Atual</span>
+                      )}
+                    </div>
+                  </button>
+                ))
+              )}
+            </div>
+
+            <div className="p-3 bg-slate-950 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
+              <span>Selecione uma sessão para continuar</span>
+              <button
+                onClick={() => setHistoricoModalAberto(false)}
+                className="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg transition-colors"
+              >
+                Fechar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
