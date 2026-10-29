@@ -8,8 +8,8 @@ services:
       POSTGRES_PASSWORD: docmind123
       POSTGRES_DB: docmind
     ports:
-      # Se você já tiver um PostgreSQL local rodando na porta 5432, altere para "5433:5432" e ajuste a DATABASE_URL no .env
-      - "5432:5432"
+      # Mapeado para 5433 no host para evitar conflito com PostgreSQL local na porta 5432
+      - "5433:5432"
     volumes:
       - pgvector_data:/var/lib/postgresql/data
     healthcheck:

@@ -186,12 +186,25 @@ export default function PaginaDocumentos() {
             </div>
 
             <div>
-              <label className="text-xs text-slate-400 font-medium">Arquivo (PDF, TXT, MD):</label>
+              <div className="flex items-center justify-between">
+                <label className="text-xs text-slate-400 font-medium">Arquivo (PDF, Markdown .md, TXT):</label>
+                <span className="text-[10px] text-purple-400 font-medium">✨ Markdown suportado</span>
+              </div>
               <input
                 id="input-arquivo"
                 type="file"
-                accept=".pdf,.txt,.md"
-                onChange={(e) => setArquivo(e.target.files?.[0] || null)}
+                accept=".pdf,.md,.markdown,.txt"
+                onChange={(e) => {
+                  const arquivoSelecionado = e.target.files?.[0] || null;
+                  setArquivo(arquivoSelecionado);
+                  if (arquivoSelecionado && !titulo) {
+                    const nomeLimpo = arquivoSelecionado.name
+                      .replace(/\.[^/.]+$/, '')
+                      .replace(/[-_]/g, ' ')
+                      .replace(/\b\w/g, (c) => c.toUpperCase());
+                    setTitulo(nomeLimpo);
+                  }
+                }}
                 className="w-full mt-1 bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-300 file:mr-2 file:py-1 file:px-2.5 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-500 cursor-pointer"
                 required
               />
@@ -259,17 +272,34 @@ export default function PaginaDocumentos() {
                 <div>
                   <div className="flex items-start justify-between gap-2">
                     <span className="font-semibold text-sm text-white line-clamp-1">{doc.titulo}</span>
-                    <span
-                      className={`text-[10px] font-semibold px-2 py-0.5 rounded-full capitalize ${
-                        doc.status === 'indexado'
-                          ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                          : doc.status === 'processando'
-                          ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                          : 'bg-red-500/10 text-red-400 border border-red-500/20'
-                      }`}
-                    >
-                      {doc.status}
-                    </span>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <span
+                        className={`text-[9px] font-bold px-1.5 py-0.5 rounded uppercase ${
+                          doc.nomeArquivo?.toLowerCase().endsWith('.md') || doc.nomeArquivo?.toLowerCase().endsWith('.markdown')
+                            ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
+                            : doc.nomeArquivo?.toLowerCase().endsWith('.pdf')
+                            ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
+                            : 'bg-slate-700/50 text-slate-300 border border-slate-600/30'
+                        }`}
+                      >
+                        {doc.nomeArquivo?.toLowerCase().endsWith('.md') || doc.nomeArquivo?.toLowerCase().endsWith('.markdown')
+                          ? 'MD'
+                          : doc.nomeArquivo?.toLowerCase().endsWith('.pdf')
+                          ? 'PDF'
+                          : 'TXT'}
+                      </span>
+                      <span
+                        className={`text-[10px] font-semibold px-2 py-0.5 rounded-full capitalize ${
+                          doc.status === 'indexado'
+                            ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                            : doc.status === 'processando'
+                            ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                            : 'bg-red-500/10 text-red-400 border border-red-500/20'
+                        }`}
+                      >
+                        {doc.status}
+                      </span>
+                    </div>
                   </div>
 
                   <p className="text-[11px] text-slate-400 mt-1 flex items-center gap-1.5">

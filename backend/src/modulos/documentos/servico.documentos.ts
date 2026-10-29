@@ -4,6 +4,7 @@ import { eq, and } from 'drizzle-orm';
 import { banco } from '../../banco/index.js';
 import { documentos, fragmentosDocumentos } from '../../banco/esquema.js';
 import { analisarPdf } from '../../utilitarios/analisadorPdf.js';
+import { analisarMarkdown } from '../../utilitarios/analisadorMarkdown.js';
 import { dividirTexto, FragmentoBruto } from '../../utilitarios/divisorTexto.js';
 import { obterProvedorVetorial } from '../../provedores/vetores/index.js';
 import { ambiente } from '../../configuracao/ambiente.js';
@@ -46,10 +47,18 @@ export class ServicoDocumentos {
       .returning();
 
     try {
-      // 3. Extração de texto por página
+      // 3. Extração estruturada de texto (PDF, Markdown ou Texto Plano)
       let fragmentosBrutos: FragmentoBruto[] = [];
 
-      if (entrada.tipoMime === 'application/pdf' || entrada.nomeArquivo.toLowerCase().endsWith('.pdf')) {
+      const nomeMinusculo = entrada.nomeArquivo.toLowerCase();
+      const ehPdf = entrada.tipoMime === 'application/pdf' || nomeMinusculo.endsWith('.pdf');
+      const ehMarkdown =
+        entrada.tipoMime === 'text/markdown' ||
+        entrada.tipoMime === 'text/x-markdown' ||
+        nomeMinusculo.endsWith('.md') ||
+        nomeMinusculo.endsWith('.markdown');
+
+      if (ehPdf) {
         const pdfAnalisado = await analisarPdf(entrada.buffer);
         for (const pagina of pdfAnalisado.paginas) {
           const fragmentosPagina = dividirTexto(
@@ -59,6 +68,9 @@ export class ServicoDocumentos {
           );
           fragmentosBrutos.push(...fragmentosPagina);
         }
+      } else if (ehMarkdown) {
+        const resultadoMarkdown = analisarMarkdown(entrada.buffer);
+        fragmentosBrutos = resultadoMarkdown.fragmentos;
       } else {
         const conteudoTexto = entrada.buffer.toString('utf-8');
         fragmentosBrutos = dividirTexto(conteudoTexto, { tamanhoMaximo: 1000, sobreposicao: 150 }, 1);
