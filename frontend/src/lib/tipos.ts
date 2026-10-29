@@ -63,6 +63,23 @@ export interface FragmentoBusca {
   pontuacao: number;
 }
 
+export interface FragmentoDetalhado {
+  id: string;
+  indiceFragmento: number;
+  numeroPagina: number | null;
+  tituloCapitulo: string | null;
+  conteudo: string;
+  vetor?: number[];
+  metadados?: any;
+  criadoEm?: string;
+}
+
+export interface DocumentoDetalhado extends Documento {
+  caminhoArquivo?: string;
+  atualizadoEm?: string;
+  fragmentos: FragmentoDetalhado[];
+}
+
 export interface VisaoGeralMetricas {
   totalDocumentos: number;
   totalFragmentos: number;

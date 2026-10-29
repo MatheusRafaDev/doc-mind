@@ -11,9 +11,12 @@ import {
   AlertCircle,
   RefreshCw,
   Plus,
+  Eye,
+  Sparkles,
 } from 'lucide-react';
 import { listarDocumentos, uploadDocumento, excluirDocumento } from '../../lib/api';
 import { Documento } from '../../lib/tipos';
+import ModalDetalhesDocumento from '../../componentes/ModalDetalhesDocumento';
 
 export default function PaginaDocumentos() {
   const [documentos, setDocumentos] = useState<Documento[]>([]);
@@ -21,6 +24,7 @@ export default function PaginaDocumentos() {
   const [enviando, setEnviando] = useState(false);
   const [mensagemSucesso, setMensagemSucesso] = useState<string | null>(null);
   const [mensagemErro, setMensagemErro] = useState<string | null>(null);
+  const [documentoIdZoom, setDocumentoIdZoom] = useState<string | null>(null);
 
   // Form State
   const [titulo, setTitulo] = useState('');
@@ -267,11 +271,14 @@ export default function PaginaDocumentos() {
             {documentos.map((doc) => (
               <div
                 key={doc.id}
-                className="bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-col justify-between space-y-3 hover:border-slate-700 transition-colors"
+                onClick={() => setDocumentoIdZoom(doc.id)}
+                className="bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-col justify-between space-y-3 hover:border-blue-500/50 hover:bg-slate-900/90 transition-all cursor-pointer group shadow-sm hover:shadow-blue-500/5"
               >
                 <div>
                   <div className="flex items-start justify-between gap-2">
-                    <span className="font-semibold text-sm text-white line-clamp-1">{doc.titulo}</span>
+                    <span className="font-semibold text-sm text-white line-clamp-1 group-hover:text-blue-400 transition-colors">
+                      {doc.titulo}
+                    </span>
                     <div className="flex items-center gap-1.5 shrink-0">
                       <span
                         className={`text-[9px] font-bold px-1.5 py-0.5 rounded uppercase ${
@@ -316,11 +323,23 @@ export default function PaginaDocumentos() {
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <span className="text-slate-400 font-mono text-[10px]">
-                      {doc.quantidadeFragmentos} chunks
-                    </span>
                     <button
-                      onClick={() => handleExcluir(doc.id, doc.titulo)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDocumentoIdZoom(doc.id);
+                      }}
+                      className="bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 hover:text-blue-300 border border-blue-500/20 px-2 py-0.5 rounded text-[10px] font-mono flex items-center gap-1 transition-colors"
+                      title="Dar zoom no documento: inspecionar fragmentos e mapa vetorial"
+                    >
+                      <Eye className="w-3 h-3 text-blue-400" />
+                      <span>{doc.quantidadeFragmentos} chunks</span>
+                    </button>
+
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleExcluir(doc.id, doc.titulo);
+                      }}
                       title="Excluir documento"
                       className="text-slate-500 hover:text-red-400 transition-colors p-1"
                     >
@@ -333,6 +352,14 @@ export default function PaginaDocumentos() {
           </div>
         )}
       </div>
+
+      {/* Modal de Zoom do Documento com Chunks e Mapa Vetorial */}
+      {documentoIdZoom && (
+        <ModalDetalhesDocumento
+          documentoId={documentoIdZoom}
+          aoFechar={() => setDocumentoIdZoom(null)}
+        />
+      )}
     </div>
   );
 }

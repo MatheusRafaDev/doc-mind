@@ -8,3 +8,4 @@ export default defineConfig({
     url: process.env.URL_BANCO_DADOS || 'postgres://docmind:docmind123@localhost:5433/docmind',
   },
 });
+

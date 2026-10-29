@@ -15,6 +15,7 @@
 
 import {
   Documento,
+  DocumentoDetalhado,
   MensagemChat,
   RespostaDiagnostico,
   FragmentoBusca,
@@ -55,6 +56,17 @@ export async function listarDocumentos(filtros?: {
     cache: 'no-store',
   });
   if (!res.ok) throw new Error('Falha ao listar documentos.');
+  return res.json();
+}
+
+/**
+ * Obtém os detalhes completos de um documento, incluindo todos os seus fragmentos e vetores (GET /api/v1/documentos/:id).
+ */
+export async function obterDocumentoPorId(id: string): Promise<DocumentoDetalhado> {
+  const res = await fetch(`${URL_API}/api/v1/documentos/${id}`, {
+    cache: 'no-store',
+  });
+  if (!res.ok) throw new Error('Falha ao carregar detalhes e chunks do documento.');
   return res.json();
 }
 

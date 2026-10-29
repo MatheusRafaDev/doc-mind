@@ -176,9 +176,13 @@ export class ServicoDocumentos {
         numeroPagina: fragmentosDocumentos.numeroPagina,
         tituloCapitulo: fragmentosDocumentos.tituloCapitulo,
         conteudo: fragmentosDocumentos.conteudo,
+        vetor: fragmentosDocumentos.vetor,
+        metadados: fragmentosDocumentos.metadados,
+        criadoEm: fragmentosDocumentos.criadoEm,
       })
       .from(fragmentosDocumentos)
-      .where(eq(fragmentosDocumentos.documentoId, id));
+      .where(eq(fragmentosDocumentos.documentoId, id))
+      .orderBy(fragmentosDocumentos.indiceFragmento);
 
     return { ...doc, fragmentos };
   }
