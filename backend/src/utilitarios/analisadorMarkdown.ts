@@ -146,3 +146,4 @@ export function analisarMarkdown(conteudoBufferOuTexto: Buffer | string): Result
     totalCaracteres: textoProcessado.length,
   };
 }
+

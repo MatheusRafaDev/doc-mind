@@ -9,7 +9,8 @@
     "start": "node dist/server.js",
     "dev": "tsx watch src/server.ts",
     "test": "tsx src/testar-api.ts",
-    "db:migrate": "tsx src/banco/migrar.ts"
+    "db:migrate": "tsx src/banco/migrar.ts",
+    "db:studio": "drizzle-kit studio"
   },
   "keywords": [
     "erp",
