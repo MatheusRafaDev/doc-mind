@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Search, BookOpen, Layers, CheckCircle2, SlidersHorizontal } from 'lucide-react';
 import { executarBuscaHibrida } from '../../lib/api';
 import { FragmentoBusca } from '../../lib/types';
+import MarkdownRenderer from '../../components/MarkdownRenderer';
 
 export default function PaginaBusca() {
   const [termo, setTermo] = useState('');
@@ -160,9 +161,9 @@ export default function PaginaBusca() {
                   </div>
                 )}
 
-                <p className="text-xs text-slate-300 leading-relaxed font-mono bg-slate-950 p-3 rounded-lg border border-slate-800/80 whitespace-pre-wrap">
-                  {item.conteudo}
-                </p>
+                <div className="bg-slate-950 p-4 rounded-xl border border-slate-800/80">
+                  <MarkdownRenderer conteudo={item.conteudo} />
+                </div>
               </div>
             ))}
           </div>

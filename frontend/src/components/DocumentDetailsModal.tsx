@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { DocumentoDetalhado, FragmentoDetalhado } from '../lib/types';
 import { obterDocumentoPorId } from '../lib/api';
+import MarkdownRenderer from './MarkdownRenderer';
 
 interface ModalDetalhesDocumentoProps {
   documentoId: string;
@@ -38,6 +39,7 @@ export default function ModalDetalhesDocumento({
   const [copiadoId, setCopiadoId] = useState<string | null>(null);
   const [copiadoDocumento, setCopiadoDocumento] = useState(false);
   const [telaCheia, setTelaCheia] = useState(false);
+  const [modoVisualizacaoChunk, setModoVisualizacaoChunk] = useState<'formatado' | 'raw'>('formatado');
 
   function copiarDocumentoCompleto() {
     if (!doc || !doc.fragmentos) return;
@@ -343,19 +345,49 @@ export default function ModalDetalhesDocumento({
                   {(abaAtiva === 'chunks' || abaAtiva === 'ambos') && (
                     <div className="space-y-3">
                       <div className="flex items-center justify-between text-xs">
-                        <span className="font-semibold text-slate-300 flex items-center gap-2">
-                          <FileText className="w-4 h-4 text-blue-400" />
-                          Conteúdo Textual Indexado
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-slate-300 flex items-center gap-2">
+                            <FileText className="w-4 h-4 text-blue-400" />
+                            Conteúdo Textual Indexado
+                          </span>
+                          <div className="bg-slate-950 border border-slate-800 p-0.5 rounded-lg flex text-[11px] ml-2">
+                            <button
+                              onClick={() => setModoVisualizacaoChunk('formatado')}
+                              className={`px-2 py-0.5 rounded transition-colors ${
+                                modoVisualizacaoChunk === 'formatado'
+                                  ? 'bg-blue-600 text-white font-medium'
+                                  : 'text-slate-400 hover:text-white'
+                              }`}
+                            >
+                              Formatado & Imagens
+                            </button>
+                            <button
+                              onClick={() => setModoVisualizacaoChunk('raw')}
+                              className={`px-2 py-0.5 rounded transition-colors ${
+                                modoVisualizacaoChunk === 'raw'
+                                  ? 'bg-blue-600 text-white font-medium'
+                                  : 'text-slate-400 hover:text-white'
+                              }`}
+                            >
+                              Raw Mono
+                            </button>
+                          </div>
+                        </div>
                         <div className="text-slate-500 flex items-center gap-3">
                           <span>{fragmentoSelecionado.conteudo.length} caracteres</span>
                           <span>~{Math.round(fragmentoSelecionado.conteudo.length / 4)} tokens estimados</span>
                         </div>
                       </div>
 
-                      <div className="p-4 bg-slate-950 border border-slate-800/80 rounded-xl font-mono text-xs text-slate-300 leading-relaxed whitespace-pre-wrap selection:bg-blue-600 selection:text-white max-h-64 overflow-y-auto">
-                        {fragmentoSelecionado.conteudo}
-                      </div>
+                      {modoVisualizacaoChunk === 'formatado' ? (
+                        <div className="p-4 bg-slate-950 border border-slate-800/80 rounded-xl text-xs text-slate-200 leading-relaxed max-h-72 overflow-y-auto">
+                          <MarkdownRenderer conteudo={fragmentoSelecionado.conteudo} />
+                        </div>
+                      ) : (
+                        <div className="p-4 bg-slate-950 border border-slate-800/80 rounded-xl font-mono text-xs text-slate-300 leading-relaxed whitespace-pre-wrap selection:bg-blue-600 selection:text-white max-h-72 overflow-y-auto">
+                          {fragmentoSelecionado.conteudo}
+                        </div>
+                      )}
                     </div>
                   )}
 
