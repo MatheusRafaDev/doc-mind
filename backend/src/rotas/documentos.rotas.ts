@@ -82,6 +82,64 @@ export async function rotasDocumentos(app: FastifyInstance) {
   );
 
   /**
+   * POST /api/v1/documentos/texto
+   * Cria um documento e seus fragmentos vetoriais diretamente a partir de um texto ou Markdown colado (Ctrl+V).
+   */
+  app.post(
+    '/texto',
+    {
+      schema: {
+        summary: 'Criar documento colando texto ou Markdown diretamente',
+        description:
+          'Recebe o texto/markdown via JSON, extrai seções, divide em fragmentos e gera vetores no PostgreSQL com pgvector.',
+        tags: ['Documentos'],
+        body: {
+          type: 'object',
+          required: ['titulo', 'sistema', 'modulo', 'conteudo'],
+          properties: {
+            titulo: { type: 'string' },
+            sistema: { type: 'string' },
+            modulo: { type: 'string' },
+            versao: { type: 'string' },
+            tipoDocumento: { type: 'string' },
+            conteudo: { type: 'string' },
+          },
+        },
+      },
+    },
+    async (requisicao, resposta) => {
+      const { titulo, sistema, modulo, versao, tipoDocumento, conteudo } = requisicao.body as {
+        titulo: string;
+        sistema: string;
+        modulo: string;
+        versao?: string;
+        tipoDocumento?: string;
+        conteudo: string;
+      };
+
+      if (!conteudo || conteudo.trim().length === 0) {
+        return resposta.status(400).send({ erro: 'O conteúdo em Markdown não pode estar vazio.' });
+      }
+
+      const nomeLimpo = titulo.toLowerCase().replace(/[^a-z0-9_-]/g, '-') + '.md';
+      const buffer = Buffer.from(conteudo, 'utf-8');
+
+      const resultado = await servicoDocumentos.uploadEIngestao({
+        titulo,
+        sistema,
+        modulo,
+        versao: versao || 'padrao',
+        tipoDocumento: tipoDocumento || 'manual',
+        nomeArquivo: nomeLimpo,
+        tipoMime: 'text/markdown',
+        buffer,
+      });
+
+      return resposta.status(201).send(resultado);
+    }
+  );
+
+  /**
    * GET /api/v1/documentos
    * Retorna todos os manuais cadastrados com filtros opcionais por sistema, módulo ou versão.
    */

@@ -13,8 +13,9 @@ import {
   Plus,
   Eye,
   Sparkles,
+  Copy,
 } from 'lucide-react';
-import { listarDocumentos, uploadDocumento, excluirDocumento } from '../../lib/api';
+import { listarDocumentos, uploadDocumento, excluirDocumento, criarDocumentoTexto } from '../../lib/api';
 import { Documento } from '../../lib/tipos';
 import ModalDetalhesDocumento from '../../componentes/ModalDetalhesDocumento';
 
@@ -34,6 +35,10 @@ export default function PaginaDocumentos() {
   const [tipoDocumento, setTipoDocumento] = useState('manual');
   const [arquivo, setArquivo] = useState<File | null>(null);
 
+  // Modo de inserção: Upload de Arquivo ou Colar Markdown / Ctrl+V
+  const [modoEntrada, setModoEntrada] = useState<'arquivo' | 'texto'>('arquivo');
+  const [conteudoMarkdown, setConteudoMarkdown] = useState('');
+
   async function carregar() {
     setCarregando(true);
     try {
@@ -50,33 +55,65 @@ export default function PaginaDocumentos() {
     carregar();
   }, []);
 
-  async function handleUpload(e: React.FormEvent) {
+  async function colarClipboard() {
+    try {
+      const texto = await navigator.clipboard.readText();
+      if (texto) {
+        setConteudoMarkdown(texto);
+        if (!titulo) {
+          const match = texto.match(/^#+\s*(.+)$/m);
+          if (match && match[1]) {
+            setTitulo(match[1].trim());
+          }
+        }
+      }
+    } catch {
+      // Navegador pode requerer interação manual; usuário pode dar Ctrl+V na textarea
+    }
+  }
+
+  async function handleSalvar(e: React.FormEvent) {
     e.preventDefault();
-    if (!arquivo || !titulo || !sistema || !modulo || enviando) return;
+    if (modoEntrada === 'arquivo' && !arquivo) return;
+    if (modoEntrada === 'texto' && !conteudoMarkdown.trim()) return;
+    if (!titulo || !sistema || !modulo || enviando) return;
 
     setEnviando(true);
     setMensagemSucesso(null);
     setMensagemErro(null);
 
-    const formData = new FormData();
-    formData.append('file', arquivo);
-    formData.append('titulo', titulo);
-    formData.append('sistema', sistema);
-    formData.append('modulo', modulo);
-    formData.append('versao', versao);
-    formData.append('tipoDocumento', tipoDocumento);
-
     try {
-      await uploadDocumento(formData);
-      setMensagemSucesso(`Manual "${titulo}" enviado e indexado no pgvector com sucesso!`);
+      if (modoEntrada === 'texto') {
+        await criarDocumentoTexto({
+          titulo,
+          sistema,
+          modulo,
+          versao,
+          tipoDocumento,
+          conteudo: conteudoMarkdown,
+        });
+        setMensagemSucesso(`Documento Markdown "${titulo}" colado e indexado no pgvector com sucesso!`);
+        setConteudoMarkdown('');
+      } else {
+        const formData = new FormData();
+        formData.append('file', arquivo!);
+        formData.append('titulo', titulo);
+        formData.append('sistema', sistema);
+        formData.append('modulo', modulo);
+        formData.append('versao', versao);
+        formData.append('tipoDocumento', tipoDocumento);
+
+        await uploadDocumento(formData);
+        setMensagemSucesso(`Manual "${titulo}" enviado e indexado no pgvector com sucesso!`);
+        setArquivo(null);
+        const fileInput = document.getElementById('input-arquivo') as HTMLInputElement;
+        if (fileInput) fileInput.value = '';
+      }
+
       setTitulo('');
-      setArquivo(null);
-      // Reseta input file
-      const fileInput = document.getElementById('input-arquivo') as HTMLInputElement;
-      if (fileInput) fileInput.value = '';
       await carregar();
     } catch (err: any) {
-      setMensagemErro(err.message || 'Erro durante o upload e indexação do manual.');
+      setMensagemErro(err.message || 'Erro durante o salvamento e indexação do manual.');
     } finally {
       setEnviando(false);
     }
@@ -117,14 +154,44 @@ export default function PaginaDocumentos() {
         </button>
       </div>
 
-      {/* Formulário de Upload */}
+      {/* Formulário de Importação (Arquivo ou Colar Markdown) */}
       <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-sm">
-        <h2 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
-          <Upload className="w-4 h-4 text-blue-400" />
-          Importar Novo Manual ou Especificação Técnica
-        </h2>
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-5 pb-3 border-b border-slate-800/80">
+          <h2 className="text-sm font-semibold text-white flex items-center gap-2">
+            <Upload className="w-4 h-4 text-blue-400" />
+            Importar Novo Manual ou Especificação Técnica
+          </h2>
 
-        <form onSubmit={handleUpload} className="space-y-4">
+          {/* Alternador de Modo: Upload de Arquivo vs Colar Markdown */}
+          <div className="bg-slate-950 border border-slate-800 p-0.5 rounded-lg flex text-xs">
+            <button
+              type="button"
+              onClick={() => setModoEntrada('arquivo')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md transition-colors ${
+                modoEntrada === 'arquivo'
+                  ? 'bg-blue-600 text-white font-medium shadow-sm'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <FileText className="w-3.5 h-3.5" />
+              <span>Upload de Arquivo</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setModoEntrada('texto')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md transition-colors ${
+                modoEntrada === 'texto'
+                  ? 'bg-purple-600 text-white font-medium shadow-sm'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <Sparkles className="w-3.5 h-3.5 text-purple-200" />
+              <span>Colar Markdown (Ctrl+V)</span>
+            </button>
+          </div>
+        </div>
+
+        <form onSubmit={handleSalvar} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="text-xs text-slate-400 font-medium">Título do Documento:</label>
@@ -189,31 +256,76 @@ export default function PaginaDocumentos() {
               </select>
             </div>
 
-            <div>
-              <div className="flex items-center justify-between">
-                <label className="text-xs text-slate-400 font-medium">Arquivo (PDF, Markdown .md, TXT):</label>
-                <span className="text-[10px] text-purple-400 font-medium">✨ Markdown suportado</span>
+            {modoEntrada === 'arquivo' && (
+              <div>
+                <div className="flex items-center justify-between">
+                  <label className="text-xs text-slate-400 font-medium">Arquivo (PDF, Markdown .md, TXT):</label>
+                  <span className="text-[10px] text-purple-400 font-medium">✨ Markdown suportado</span>
+                </div>
+                <input
+                  id="input-arquivo"
+                  type="file"
+                  accept=".pdf,.md,.markdown,.txt"
+                  onChange={(e) => {
+                    const arquivoSelecionado = e.target.files?.[0] || null;
+                    setArquivo(arquivoSelecionado);
+                    if (arquivoSelecionado && !titulo) {
+                      const nomeLimpo = arquivoSelecionado.name
+                        .replace(/\.[^/.]+$/, '')
+                        .replace(/[-_]/g, ' ')
+                        .replace(/\b\w/g, (c) => c.toUpperCase());
+                      setTitulo(nomeLimpo);
+                    }
+                  }}
+                  className="w-full mt-1 bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-300 file:mr-2 file:py-1 file:px-2.5 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-500 cursor-pointer"
+                  required={modoEntrada === 'arquivo'}
+                />
               </div>
-              <input
-                id="input-arquivo"
-                type="file"
-                accept=".pdf,.md,.markdown,.txt"
+            )}
+          </div>
+
+          {/* ÁREA DE TEXTO / MARKDOWN COLADO (Ctrl+V) */}
+          {modoEntrada === 'texto' && (
+            <div className="pt-2 space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-semibold text-purple-300 flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  Cole o Conteúdo Markdown Aqui (Ctrl+V):
+                </label>
+                <button
+                  type="button"
+                  onClick={colarClipboard}
+                  className="text-xs text-purple-300 hover:text-white font-medium flex items-center gap-1.5 bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/30 px-2.5 py-1 rounded-lg transition-colors"
+                  title="Colar da área de transferência"
+                >
+                  <Copy className="w-3 h-3" />
+                  <span>Colar da Área de Transferência (Ctrl+V)</span>
+                </button>
+              </div>
+
+              <textarea
+                value={conteudoMarkdown}
                 onChange={(e) => {
-                  const arquivoSelecionado = e.target.files?.[0] || null;
-                  setArquivo(arquivoSelecionado);
-                  if (arquivoSelecionado && !titulo) {
-                    const nomeLimpo = arquivoSelecionado.name
-                      .replace(/\.[^/.]+$/, '')
-                      .replace(/[-_]/g, ' ')
-                      .replace(/\b\w/g, (c) => c.toUpperCase());
-                    setTitulo(nomeLimpo);
+                  setConteudoMarkdown(e.target.value);
+                  if (!titulo) {
+                    const match = e.target.value.match(/^#+\s*(.+)$/m);
+                    if (match && match[1]) {
+                      setTitulo(match[1].trim());
+                    }
                   }
                 }}
-                className="w-full mt-1 bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-300 file:mr-2 file:py-1 file:px-2.5 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-500 cursor-pointer"
-                required
+                rows={8}
+                placeholder={"# Manual de Contas a Receber\n\nDescreva as regras de negócio, tabelas ou endpoints aqui...\n\n## Seção 1: Inclusão de Títulos\n- Regra 1: Todo título precisa de centro de custo.\n- Regra 2: A data de vencimento deve ser futura..."}
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl p-4 font-mono text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-purple-500 leading-relaxed shadow-inner"
+                required={modoEntrada === 'texto'}
               />
+
+              <div className="flex items-center justify-between text-[11px] text-slate-400 px-1">
+                <span>{conteudoMarkdown.length} caracteres • {conteudoMarkdown.split('\n').filter(Boolean).length} parágrafos/linhas</span>
+                <span className="text-purple-400">Dica: Os cabeçalhos # e ## dividem automaticamente o documento em capítulos e páginas virtuais no pgvector</span>
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="flex items-center justify-between pt-2">
             <div>
@@ -233,18 +345,22 @@ export default function PaginaDocumentos() {
 
             <button
               type="submit"
-              disabled={enviando || !arquivo}
-              className="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-medium px-5 py-2.5 rounded-xl text-xs flex items-center gap-2 transition-all shadow-md shadow-blue-600/20"
+              disabled={enviando || (modoEntrada === 'arquivo' ? !arquivo : !conteudoMarkdown.trim())}
+              className={`${
+                modoEntrada === 'texto'
+                  ? 'bg-purple-600 hover:bg-purple-500 shadow-purple-600/20'
+                  : 'bg-blue-600 hover:bg-blue-500 shadow-blue-600/20'
+              } disabled:opacity-50 text-white font-medium px-5 py-2.5 rounded-xl text-xs flex items-center gap-2 transition-all shadow-md`}
             >
               {enviando ? (
                 <>
                   <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  <span>Extraindo páginas e indexando vetores...</span>
+                  <span>Fatiando seções e indexando vetores no pgvector...</span>
                 </>
               ) : (
                 <>
                   <Upload className="w-3.5 h-3.5" />
-                  <span>Enviar e Indexar</span>
+                  <span>{modoEntrada === 'texto' ? 'Salvar e Indexar Markdown' : 'Enviar e Indexar'}</span>
                 </>
               )}
             </button>

@@ -36,7 +36,16 @@ export default function ModalDetalhesDocumento({
   const [filtroTexto, setFiltroTexto] = useState('');
   const [fragmentoSelecionado, setFragmentoSelecionado] = useState<FragmentoDetalhado | null>(null);
   const [copiadoId, setCopiadoId] = useState<string | null>(null);
+  const [copiadoDocumento, setCopiadoDocumento] = useState(false);
   const [telaCheia, setTelaCheia] = useState(false);
+
+  function copiarDocumentoCompleto() {
+    if (!doc || !doc.fragmentos) return;
+    const textoCompleto = doc.fragmentos.map((f) => f.conteudo).join('\n\n');
+    navigator.clipboard.writeText(textoCompleto);
+    setCopiadoDocumento(true);
+    setTimeout(() => setCopiadoDocumento(false), 2000);
+  }
 
   useEffect(() => {
     async function carregarDetalhes() {
@@ -135,6 +144,23 @@ export default function ModalDetalhesDocumento({
           </div>
 
           <div className="flex items-center gap-2">
+            <button
+              onClick={copiarDocumentoCompleto}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg text-xs font-medium transition-colors border border-slate-700/60"
+              title="Copiar todo o documento Markdown para a área de transferência (Ctrl+C)"
+            >
+              {copiadoDocumento ? (
+                <>
+                  <Check className="w-3.5 h-3.5 text-emerald-400" />
+                  <span className="text-emerald-400">Markdown Copiado!</span>
+                </>
+              ) : (
+                <>
+                  <Copy className="w-3.5 h-3.5 text-purple-400" />
+                  <span>Copiar Tudo em Markdown (Ctrl+C)</span>
+                </>
+              )}
+            </button>
             <button
               onClick={() => setTelaCheia(!telaCheia)}
               className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
@@ -459,3 +485,4 @@ export default function ModalDetalhesDocumento({
     </div>
   );
 }
+

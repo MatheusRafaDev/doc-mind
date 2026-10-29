@@ -86,6 +86,29 @@ export async function uploadDocumento(formData: FormData): Promise<any> {
 }
 
 /**
+ * Cria um documento e seus fragmentos diretamente colando texto ou Markdown (Ctrl+V) (POST /api/v1/documentos/texto).
+ */
+export async function criarDocumentoTexto(dados: {
+  titulo: string;
+  sistema: string;
+  modulo: string;
+  versao?: string;
+  tipoDocumento?: string;
+  conteudo: string;
+}): Promise<any> {
+  const res = await fetch(`${URL_API}/api/v1/documentos/texto`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(dados),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.erro || 'Falha ao salvar e indexar o Markdown colado.');
+  }
+  return res.json();
+}
+
+/**
  * Remove um documento e todos os seus fragmentos vetoriais (DELETE /api/v1/documentos/:id).
  */
 export async function excluirDocumento(id: string): Promise<boolean> {
