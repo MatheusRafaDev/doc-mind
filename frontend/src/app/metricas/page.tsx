@@ -16,7 +16,7 @@ import {
   obterLacunasConhecimento,
   resolverLacuna,
 } from '../../lib/api';
-import { VisaoGeralMetricas, LacunaConhecimento } from '../../lib/tipos';
+import { VisaoGeralMetricas, LacunaConhecimento } from '../../lib/types';
 
 export default function PaginaMetricas() {
   const [metricas, setMetricas] = useState<VisaoGeralMetricas | null>(null);

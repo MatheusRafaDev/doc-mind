@@ -21,7 +21,7 @@ import {
   FragmentoBusca,
   VisaoGeralMetricas,
   LacunaConhecimento,
-} from './tipos';
+} from './types';
 
 const URL_API = process.env.NEXT_PUBLIC_URL_API || 'http://localhost:3000';
 

@@ -27,13 +27,13 @@ import cors from '@fastify/cors';
 import multipart from '@fastify/multipart';
 import swagger from '@fastify/swagger';
 import swaggerUi from '@fastify/swagger-ui';
-import { verificarConexaoBanco } from './banco/index.js';
-import { rotasDocumentos } from './rotas/documentos.rotas.js';
-import { rotasBusca } from './rotas/busca.rotas.js';
-import { rotasChat } from './rotas/chat.rotas.js';
-import { rotasDiagnostico } from './rotas/diagnostico.rotas.js';
-import { rotasMetricas } from './rotas/metricas.rotas.js';
-import { ambiente } from './configuracao/ambiente.js';
+import { verificarConexaoBanco } from './database/index.js';
+import { rotasDocumentos } from './routes/documents.routes.js';
+import { rotasBusca } from './routes/search.routes.js';
+import { rotasChat } from './routes/chat.routes.js';
+import { rotasDiagnostico } from './routes/diagnostic.routes.js';
+import { rotasMetricas } from './routes/metrics.routes.js';
+import { ambiente } from './config/env.js';
 
 export async function criarAplicacao() {
   const app = fastify({

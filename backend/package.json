@@ -8,8 +8,8 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "dev": "tsx watch src/server.ts",
-    "test": "tsx src/testar-api.ts",
-    "db:migrate": "tsx src/banco/migrar.ts",
+    "test": "tsx src/test-api.ts",
+    "db:migrate": "tsx src/database/migrate.ts",
     "db:studio": "drizzle-kit studio"
   },
   "keywords": [

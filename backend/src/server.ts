@@ -16,8 +16,8 @@
  */
 
 import { criarAplicacao } from './app.js';
-import { executarMigracoes } from './banco/migrar.js';
-import { ambiente } from './configuracao/ambiente.js';
+import { executarMigracoes } from './database/migrate.js';
+import { ambiente } from './config/env.js';
 
 async function iniciar() {
   // 1. Constrói a instância da aplicação Fastify com Swagger, CORS e Rotas

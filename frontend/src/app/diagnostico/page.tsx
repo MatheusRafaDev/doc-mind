@@ -14,7 +14,7 @@ import {
   ShieldAlert,
 } from 'lucide-react';
 import { diagnosticarErro } from '../../lib/api';
-import { RespostaDiagnostico } from '../../lib/tipos';
+import { RespostaDiagnostico } from '../../lib/types';
 
 export default function PaginaDiagnostico() {
   const [sistema, setSistema] = useState(process.env.NEXT_PUBLIC_SISTEMA_PADRAO || 'Volpe');

@@ -16,8 +16,8 @@ import {
   Copy,
 } from 'lucide-react';
 import { listarDocumentos, uploadDocumento, excluirDocumento, criarDocumentoTexto } from '../../lib/api';
-import { Documento } from '../../lib/tipos';
-import ModalDetalhesDocumento from '../../componentes/ModalDetalhesDocumento';
+import { Documento } from '../../lib/types';
+import DocumentDetailsModal from '../../components/DocumentDetailsModal';
 
 export default function PaginaDocumentos() {
   const [documentos, setDocumentos] = useState<Documento[]>([]);
@@ -471,7 +471,7 @@ export default function PaginaDocumentos() {
 
       {/* Modal de Zoom do Documento com Chunks e Mapa Vetorial */}
       {documentoIdZoom && (
-        <ModalDetalhesDocumento
+        <DocumentDetailsModal
           documentoId={documentoIdZoom}
           aoFechar={() => setDocumentoIdZoom(null)}
         />

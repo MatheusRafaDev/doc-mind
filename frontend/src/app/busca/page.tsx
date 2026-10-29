@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { Search, BookOpen, Layers, CheckCircle2, SlidersHorizontal } from 'lucide-react';
 import { executarBuscaHibrida } from '../../lib/api';
-import { FragmentoBusca } from '../../lib/tipos';
+import { FragmentoBusca } from '../../lib/types';
 
 export default function PaginaBusca() {
   const [termo, setTermo] = useState('');

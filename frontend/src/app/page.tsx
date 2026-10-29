@@ -13,7 +13,7 @@ import {
   SlidersHorizontal,
 } from 'lucide-react';
 import { enviarPerguntaChat } from '../lib/api';
-import { MensagemChat, FonteConsultada } from '../lib/tipos';
+import { MensagemChat, FonteConsultada } from '../lib/types';
 
 const perguntasSugeridas = [
   'Como funciona o processo de importação de notas fiscais no ERP?',
