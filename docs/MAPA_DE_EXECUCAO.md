@@ -220,3 +220,4 @@ flowchart TD
 2. **Para alterar o modelo de IA ou Embeddings:**
    - Altere as variáveis `PROVEDOR_LLM` e `PROVEDOR_VETOR` no seu `.env` para `gemini`, `openai` ou `simulado`.
    - Nenhuma linha de código precisa ser alterada: a fábrica desacoplada em `provedores/` faz a alternância transparente.
+
