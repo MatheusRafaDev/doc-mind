@@ -36,3 +36,4 @@ export interface McpToolHandler {
   departamentoPermitido?: string[];
   executar: (parametros: Record<string, any>, contextoUsuario?: any) => Promise<McpToolResult>;
 }
+

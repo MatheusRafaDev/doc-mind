@@ -182,3 +182,4 @@ export async function rotasMultiagente(app: FastifyInstance) {
     }
   );
 }
+
