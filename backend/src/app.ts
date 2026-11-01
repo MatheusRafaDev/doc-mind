@@ -33,6 +33,7 @@ import { rotasBusca } from './routes/search.routes.js';
 import { rotasChat } from './routes/chat.routes.js';
 import { rotasDiagnostico } from './routes/diagnostic.routes.js';
 import { rotasMetricas } from './routes/metrics.routes.js';
+import { rotasMultiagente } from './routes/multiagent.routes.js';
 import { ambiente } from './config/env.js';
 
 export async function criarAplicacao() {
@@ -73,6 +74,7 @@ export async function criarAplicacao() {
         { name: 'Chat RAG', description: 'Perguntas e respostas fundamentadas com fontes e páginas' },
         { name: 'Diagnóstico Técnico', description: 'Investigação e classificação de erros e logs via LangGraph' },
         { name: 'Métricas & Governança', description: 'Monitoramento e lacunas de documentação' },
+        { name: 'Multi-Agentes', description: 'Orquestração multi-agente, ferramentas MCP e aprovação Human-in-the-Loop (HITL)' },
       ],
     },
   });
@@ -128,6 +130,7 @@ export async function criarAplicacao() {
   await app.register(rotasChat, { prefix: '/api/v1/chat' });
   await app.register(rotasDiagnostico, { prefix: '/api/v1/diagnostico' });
   await app.register(rotasMetricas, { prefix: '/api/v1/metricas' });
+  await app.register(rotasMultiagente, { prefix: '/api/v1/multi-agente' });
 
   return app;
 }

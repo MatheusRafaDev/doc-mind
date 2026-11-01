@@ -12,6 +12,7 @@ import {
   BrainCircuit,
   Radio,
   FileCode2,
+  Bot,
 } from 'lucide-react';
 import { checarSaudeApi } from '../lib/api';
 
@@ -21,6 +22,12 @@ const itensNavegacao = [
     href: '/',
     icone: MessageSquare,
     descricao: 'Tirar dúvidas com fontes',
+  },
+  {
+    nome: 'Multi-Agentes & HITL',
+    href: '/multi-agente',
+    icone: Bot,
+    descricao: 'Orquestração cross-domain & MCP',
   },
   {
     nome: 'Diagnóstico de Erros',

@@ -236,4 +236,63 @@ export async function resolverLacuna(id: string): Promise<boolean> {
   return res.ok;
 }
 
+/**
+ * Executa uma solicitação corporativa complexa via Orquestrador Multi-Agentes (POST /api/v1/multi-agente/executar).
+ */
+export async function executarMultiagente(dados: {
+  solicitacao: string;
+  solicitante?: string;
+  departamento?: string;
+}): Promise<any> {
+  const res = await fetch(`${URL_API}/api/v1/multi-agente/executar`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(dados),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.erro || 'Falha ao processar orquestração multi-agente.');
+  }
+  return res.json();
+}
+
+/**
+ * Lista as aprovações pendentes ou resolvidas na fila Human-in-the-Loop (GET /api/v1/multi-agente/aprovacoes).
+ */
+export async function listarAprovacoesHitl(status?: string): Promise<any[]> {
+  const params = status ? `?status=${status}` : '';
+  const res = await fetch(`${URL_API}/api/v1/multi-agente/aprovacoes${params}`, {
+    cache: 'no-store',
+  });
+  if (!res.ok) return [];
+  return res.json();
+}
+
+/**
+ * Responde a uma aprovação de alçada Human-in-the-Loop (POST /api/v1/multi-agente/aprovacoes/:id/responder).
+ */
+export async function responderAprovacaoHitl(
+  id: string,
+  dados: { decisao: 'aprovado' | 'rejeitado'; aprovador: string; justificativa?: string }
+): Promise<any> {
+  const res = await fetch(`${URL_API}/api/v1/multi-agente/aprovacoes/${id}/responder`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(dados),
+  });
+  if (!res.ok) throw new Error('Falha ao registrar aprovação.');
+  return res.json();
+}
+
+/**
+ * Lista as ferramentas e servidores MCP conectados (GET /api/v1/multi-agente/ferramentas-mcp).
+ */
+export async function listarFerramentasMcp(): Promise<any[]> {
+  const res = await fetch(`${URL_API}/api/v1/multi-agente/ferramentas-mcp`, {
+    cache: 'no-store',
+  });
+  if (!res.ok) return [];
+  return res.json();
+}
+
 

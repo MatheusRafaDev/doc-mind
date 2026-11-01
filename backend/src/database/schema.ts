@@ -130,6 +130,37 @@ export const lacunasConhecimento = pgTable('lacunas_conhecimento', {
   criadoEm: timestamp('criado_em').defaultNow().notNull(),
 });
 
+// 7. Tabela de Human-in-the-Loop (HITL) - Fila de Aprovações de Alçadas
+export const aprovacoesHitl = pgTable('aprovacoes_hitl', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  tipo: varchar('tipo', { length: 100 }).notNull(), // 'desconto_comercial', 'alteracao_contratual', 'baixa_titulo'
+  titulo: varchar('titulo', { length: 255 }).notNull(),
+  solicitante: varchar('solicitante', { length: 150 }).notNull(),
+  departamento: varchar('departamento', { length: 100 }).notNull(),
+  dados: jsonb('dados').default({}).notNull(), // Payload com dados do cliente, margem, valor, proposta
+  status: varchar('status', { length: 30 }).default('pendente').notNull(), // 'pendente', 'aprovado', 'rejeitado'
+  aprovador: varchar('aprovador', { length: 150 }),
+  justificativa: text('justificativa'),
+  criadoEm: timestamp('criado_em').defaultNow().notNull(),
+  respondidoEm: timestamp('respondido_em'),
+});
+
+// 8. Tabela de Execuções Multi-Agente (Orquestração, DAG & Observabilidade)
+export const execucoesMultiagente = pgTable('execucoes_multiagente', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  solicitacao: text('solicitacao').notNull(),
+  solicitante: varchar('solicitante', { length: 150 }).notNull(),
+  departamento: varchar('departamento', { length: 100 }).notNull(),
+  status: varchar('status', { length: 50 }).default('em_andamento').notNull(), // 'em_andamento', 'aguardando_aprovacao', 'concluido', 'rejeitado', 'erro'
+  plano: jsonb('plano').default([]), // DAG de tarefas planejado pelo Supervisor
+  resultados: jsonb('resultados').default({}), // Resultados coletados dos agentes especializados
+  decisao: jsonb('decisao').default({}), // Parecer final, proposta comercial gerada
+  aprovacaoId: uuid('aprovacao_id').references(() => aprovacoesHitl.id, { onDelete: 'set null' }),
+  telemetria: jsonb('telemetria').default({}), // Spans, tokens, latência e custo por departamento
+  criadoEm: timestamp('criado_em').defaultNow().notNull(),
+  atualizadoEm: timestamp('atualizado_em').defaultNow().notNull(),
+});
+
 // Definição de Relações (para queries com Drizzle relational queries)
 export const relacoesDocumentos = relations(documentos, ({ many }) => ({
   fragmentos: many(fragmentosDocumentos),

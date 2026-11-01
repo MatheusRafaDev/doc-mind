@@ -259,3 +259,4 @@ sequenceDiagram
   - Separação entre Pods de Orquestração (I/O intensivos) e Pods de Recuperação/Embeddings.
 * **Model Router & Resiliência**:
   - Gateway de LLM (LiteLLM / vLLM) com balanceamento de carga e fallbacks transparentes entre provedores (Claude 3.7 Sonnet -> Gemini 2.5/3.5 Flash -> GPT-4o) para garantir 99.9% de SLA mesmo diante de incidentes nos provedores de nuvem.
+

@@ -132,6 +132,41 @@ export async function executarMigracoes() {
       );
     `);
 
+    // 9. Tabela de Aprovações Human-in-the-Loop (HITL)
+    await cliente.query(`
+      CREATE TABLE IF NOT EXISTS aprovacoes_hitl (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        tipo VARCHAR(100) NOT NULL,
+        titulo VARCHAR(255) NOT NULL,
+        solicitante VARCHAR(150) NOT NULL,
+        departamento VARCHAR(100) NOT NULL,
+        dados JSONB NOT NULL DEFAULT '{}',
+        status VARCHAR(30) NOT NULL DEFAULT 'pendente',
+        aprovador VARCHAR(150),
+        justificativa TEXT,
+        criado_em TIMESTAMP NOT NULL DEFAULT NOW(),
+        respondido_em TIMESTAMP
+      );
+    `);
+
+    // 10. Tabela de Execuções Multi-Agente
+    await cliente.query(`
+      CREATE TABLE IF NOT EXISTS execucoes_multiagente (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        solicitacao TEXT NOT NULL,
+        solicitante VARCHAR(150) NOT NULL,
+        departamento VARCHAR(100) NOT NULL,
+        status VARCHAR(50) NOT NULL DEFAULT 'em_andamento',
+        plano JSONB DEFAULT '[]',
+        resultados JSONB DEFAULT '{}',
+        decisao JSONB DEFAULT '{}',
+        aprovacao_id UUID REFERENCES aprovacoes_hitl(id) ON DELETE SET NULL,
+        telemetria JSONB DEFAULT '{}',
+        criado_em TIMESTAMP NOT NULL DEFAULT NOW(),
+        atualizado_em TIMESTAMP NOT NULL DEFAULT NOW()
+      );
+    `);
+
     await cliente.query('COMMIT');
     console.log('✅ Todas as tabelas do DocMind foram criadas e atualizadas com sucesso!');
   } catch (erro) {
@@ -144,8 +179,13 @@ export async function executarMigracoes() {
   }
 }
 
-// Execução direta via CLI (quando chamado com `npm run db:migrate`)
-if (process.argv[1]?.endsWith('migrar.ts') || process.argv[1]?.endsWith('migrar.js')) {
+// Execução direta via CLI (quando chamado com `npm run db:migrate` ou `tsx src/database/migrate.ts`)
+if (
+  process.argv[1]?.endsWith('migrate.ts') ||
+  process.argv[1]?.endsWith('migrate.js') ||
+  process.argv[1]?.endsWith('migrar.ts') ||
+  process.argv[1]?.endsWith('migrar.js')
+) {
   executarMigracoes().catch((err) => {
     console.error(err);
     process.exit(1);

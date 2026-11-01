@@ -98,3 +98,74 @@ export interface LacunaConhecimento {
   criadoEm: string;
 }
 
+export interface TarefaPlano {
+  id: string;
+  agente: string;
+  descricao: string;
+  status: 'pendente' | 'executando' | 'concluido';
+}
+
+export interface AprovacaoHitl {
+  id: string;
+  tipo: string;
+  titulo: string;
+  solicitante: string;
+  departamento: string;
+  dados: any;
+  status: 'pendente' | 'aprovado' | 'rejeitado';
+  aprovador?: string;
+  justificativa?: string;
+  criadoEm: string;
+  respondidoEm?: string;
+}
+
+export interface SpanTelemetria {
+  id: string;
+  nome: string;
+  agente?: string;
+  departamento: string;
+  tipo: string;
+  duracaoMs: number;
+  tokensEntrada: number;
+  tokensSaida: number;
+  custoUsd: number;
+}
+
+export interface RespostaMultiagente {
+  id: string;
+  solicitacaoOriginal: string;
+  solicitacaoSanitizada: string;
+  status: 'concluido' | 'aguardando_aprovacao' | 'rejeitado' | 'erro';
+  guardrails: {
+    seguro: boolean;
+    piiDetectados: Array<{ tipo: string; original: string; mascarado: string }>;
+    scoreGroundedness: number;
+    dlpSeguro: boolean;
+  };
+  plano: TarefaPlano[];
+  resultadosAgentes: {
+    comercial: any;
+    financeiro: any;
+    juridico: any;
+  };
+  decisao: {
+    viavel: boolean;
+    motivo: string;
+    descontoSolicitado: number;
+    margemFinalPercentual: number;
+    necessitaAprovacaoAlcada: boolean;
+  };
+  propostaGerada: any;
+  aprovacaoHitl: AprovacaoHitl | null;
+  respostaSintetizada: string;
+  telemetria: {
+    execucaoId: string;
+    duracaoTotalMs: number;
+    totalTokens: number;
+    totalCustoUsd: number;
+    totalCustoBrl: number;
+    spans: SpanTelemetria[];
+    custoPorDepartamento: Record<string, { tokens: number; custoUsd: number; custoBrl: number }>;
+  };
+}
+
