@@ -9,56 +9,89 @@ import {
   BookOpen,
   Search,
   BarChart3,
-  BrainCircuit,
   Radio,
   FileCode2,
   Bot,
+  Database,
+  User,
+  ShieldCheck,
+  ChevronRight,
+  Sparkles,
 } from 'lucide-react';
 import { checarSaudeApi } from '../lib/api';
+import Logo from './Logo';
 
-const itensNavegacao = [
+interface ItemNavegacao {
+  nome: string;
+  href: string;
+  icone: any;
+  descricao: string;
+  destaque?: string;
+}
+
+interface GrupoNavegacao {
+  categoria: string;
+  itens: ItemNavegacao[];
+}
+
+const gruposNavegacao: GrupoNavegacao[] = [
   {
-    nome: 'Chat Inteligente (RAG)',
-    href: '/',
-    icone: MessageSquare,
-    descricao: 'Tirar dúvidas com fontes',
+    categoria: 'WORKSPACE & IA',
+    itens: [
+      {
+        nome: 'Chat Inteligente (RAG)',
+        href: '/',
+        icone: MessageSquare,
+        descricao: 'Perguntas com citações de páginas',
+      },
+      {
+        nome: 'Multi-Agentes & HITL',
+        href: '/multi-agente',
+        icone: Bot,
+        descricao: 'LangGraph, MCP & Aprovações',
+        destaque: 'v2.0',
+      },
+      {
+        nome: 'Diagnóstico de Erros',
+        href: '/diagnostico',
+        icone: Stethoscope,
+        descricao: 'Análise de logs e incidentes',
+      },
+    ],
   },
   {
-    nome: 'Multi-Agentes & HITL',
-    href: '/multi-agente',
-    icone: Bot,
-    descricao: 'Orquestração cross-domain & MCP',
+    categoria: 'BASE DE CONHECIMENTO',
+    itens: [
+      {
+        nome: 'Biblioteca de Manuais',
+        href: '/documentos',
+        icone: BookOpen,
+        descricao: 'Upload e gestão de PDFs e MD',
+      },
+      {
+        nome: 'Pesquisa Técnica',
+        href: '/busca',
+        icone: Search,
+        descricao: 'Busca híbrida de trechos',
+      },
+    ],
   },
   {
-    nome: 'Diagnóstico de Erros',
-    href: '/diagnostico',
-    icone: Stethoscope,
-    descricao: 'LangGraph & Fatos vs Hipóteses',
-  },
-  {
-    nome: 'Biblioteca de Manuais',
-    href: '/documentos',
-    icone: BookOpen,
-    descricao: 'Upload e gestão de PDFs/APIs',
-  },
-  {
-    nome: 'Pesquisa Técnica',
-    href: '/busca',
-    icone: Search,
-    descricao: 'Busca híbrida de trechos',
-  },
-  {
-    nome: 'Métricas & Lacunas',
-    href: '/metricas',
-    icone: BarChart3,
-    descricao: 'Auditoria de conhecimento',
+    categoria: 'GOVERNANÇA',
+    itens: [
+      {
+        nome: 'Métricas & Lacunas',
+        href: '/metricas',
+        icone: BarChart3,
+        descricao: 'Auditoria e tópicos sem cobertura',
+      },
+    ],
   },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
   const [apiOnline, setApiOnline] = useState<boolean | null>(null);
-  const nomeApp = process.env.NEXT_PUBLIC_NOME_APP || 'DocMind — ERP Knowledge AI';
 
   useEffect(() => {
     async function verificar() {
@@ -66,59 +99,89 @@ export function Sidebar() {
       setApiOnline(online);
     }
     verificar();
-    const intervalo = setInterval(verificar, 15000);
+    const intervalo = setInterval(verificar, 12000);
     return () => clearInterval(intervalo);
   }, []);
 
   return (
-    <aside className="w-64 bg-slate-900 border-r border-slate-800 flex flex-col justify-between p-4 shrink-0 h-screen sticky top-0">
-      <div>
-        {/* Cabeçalho / Logo */}
-        <div className="flex items-center gap-3 px-2 py-3 border-b border-slate-800 mb-6">
-          <div className="bg-blue-600/20 p-2 rounded-xl text-blue-400 border border-blue-500/30">
-            <BrainCircuit className="w-6 h-6" />
-          </div>
-          <div>
-            <h1 className="font-bold text-white text-base leading-tight">DocMind</h1>
-            <p className="text-xs text-slate-400">ERP Knowledge AI</p>
-          </div>
+    <aside className="w-64 bg-slate-950/90 border-r border-slate-800/80 flex flex-col justify-between shrink-0 h-screen sticky top-0 z-40 backdrop-blur-md">
+      {/* Topo / Logo */}
+      <div className="p-4 overflow-y-auto">
+        <div className="px-2 py-2 border-b border-slate-800/60 mb-5">
+          <Link href="/" className="hover:opacity-90 transition-opacity block">
+            <Logo tamanho="md" comTexto comSubtitulo />
+          </Link>
         </div>
 
-        {/* Links de Navegação */}
-        <nav className="space-y-1">
-          {itensNavegacao.map((item) => {
-            const Icone = item.icone;
-            const ativo = pathname === item.href;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${
-                  ativo
-                    ? 'bg-blue-600 text-white font-medium shadow-md shadow-blue-600/20'
-                    : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
-                }`}
-              >
-                <Icone className="w-4 h-4 shrink-0" />
-                <div className="overflow-hidden">
-                  <div className="truncate">{item.nome}</div>
-                  <div className="text-[10px] text-slate-400/80 truncate">{item.descricao}</div>
-                </div>
-              </Link>
-            );
-          })}
-        </nav>
+        {/* Grupos de Navegação */}
+        <div className="space-y-6">
+          {gruposNavegacao.map((grupo) => (
+            <div key={grupo.categoria} className="space-y-1">
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider px-3 mb-2 block font-mono">
+                {grupo.categoria}
+              </span>
+
+              {grupo.itens.map((item) => {
+                const Icone = item.icone;
+                const ativo = pathname === item.href;
+
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`group relative flex items-center justify-between px-3 py-2.5 rounded-xl text-xs transition-all ${
+                      ativo
+                        ? 'bg-gradient-to-r from-blue-600/20 to-purple-600/10 text-white font-semibold border border-blue-500/30 shadow-md shadow-blue-600/10'
+                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'
+                    }`}
+                  >
+                    {/* Borda Esquerda Ativa Neon */}
+                    {ativo && (
+                      <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-gradient-to-b from-cyan-400 to-blue-500 rounded-r-full" />
+                    )}
+
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div
+                        className={`p-1.5 rounded-lg transition-colors ${
+                          ativo
+                            ? 'bg-blue-500/20 text-cyan-300'
+                            : 'bg-slate-900/80 text-slate-400 group-hover:text-slate-200 group-hover:bg-slate-800'
+                        }`}
+                      >
+                        <Icone className="w-4 h-4 shrink-0" />
+                      </div>
+
+                      <div className="truncate">
+                        <span className="block truncate text-[12.5px] leading-tight">{item.nome}</span>
+                        <span className="text-[10px] text-slate-500 truncate block mt-0.5 font-normal">
+                          {item.descricao}
+                        </span>
+                      </div>
+                    </div>
+
+                    {item.destaque && (
+                      <span className="text-[9px] uppercase tracking-wider font-bold px-1.5 py-0.2 bg-purple-500/20 text-purple-300 border border-purple-500/30 rounded font-mono shrink-0">
+                        {item.destaque}
+                      </span>
+                    )}
+                  </Link>
+                );
+              })}
+            </div>
+          ))}
+        </div>
       </div>
 
-      {/* Rodapé: Status da API Backend */}
-      <div className="border-t border-slate-800 pt-4 px-2 space-y-3">
-        <div className="flex items-center justify-between text-xs">
-          <span className="text-slate-400 flex items-center gap-1.5">
+      {/* Rodapé: Conectividade & Perfil */}
+      <div className="p-4 border-t border-slate-800/80 bg-slate-950/60 space-y-3">
+        {/* Status da API Fastify & PostgreSQL */}
+        <div className="flex items-center justify-between text-[11px] px-1">
+          <span className="text-slate-400 flex items-center gap-1.5 font-medium">
             <Radio className="w-3.5 h-3.5 text-slate-400" />
-            Backend API:
+            Backend Fastify:
           </span>
           <span
-            className={`flex items-center gap-1.5 font-medium px-2 py-0.5 rounded-full text-[11px] ${
+            className={`flex items-center gap-1.5 font-medium px-2 py-0.5 rounded-full text-[10px] font-mono ${
               apiOnline === true
                 ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
                 : apiOnline === false
@@ -135,21 +198,40 @@ export function Sidebar() {
                   : 'bg-amber-400'
               }`}
             />
-            {apiOnline === true ? 'Online (3000)' : apiOnline === false ? 'Offline' : 'Checando...'}
+            {apiOnline === true ? 'Online :3000' : apiOnline === false ? 'Offline' : 'Checando...'}
           </span>
         </div>
 
+        {/* Link Rápido para Swagger /docs */}
         <a
           href="http://localhost:3000/docs"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center justify-center gap-1.5 w-full py-1.5 px-3 bg-slate-800/80 hover:bg-slate-700/80 text-slate-300 rounded-lg text-xs font-medium transition-colors border border-slate-700/50"
+          className="flex items-center justify-between w-full py-1.5 px-2.5 bg-slate-900/80 hover:bg-slate-800/90 text-slate-300 hover:text-white rounded-lg text-[11px] font-medium transition-colors border border-slate-800"
         >
-          <FileCode2 className="w-3.5 h-3.5 text-blue-400" />
-          Swagger OpenAPI
+          <span className="flex items-center gap-1.5">
+            <FileCode2 className="w-3.5 h-3.5 text-blue-400" />
+            <span>OpenAPI Docs</span>
+          </span>
+          <ChevronRight className="w-3 h-3 text-slate-500" />
         </a>
+
+        {/* Perfil do Colaborador Autenticado */}
+        <div className="flex items-center gap-2.5 pt-1 px-1 text-xs">
+          <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-blue-600 to-purple-600 flex items-center justify-center text-white font-bold text-[11px] shadow-sm">
+            CR
+          </div>
+          <div className="overflow-hidden min-w-0">
+            <span className="font-semibold text-slate-200 block truncate text-[11.5px] leading-tight">
+              Carlos Ribeiro
+            </span>
+            <span className="text-[10px] text-slate-500 flex items-center gap-1 truncate">
+              <ShieldCheck className="w-2.5 h-2.5 text-emerald-400" />
+              Nível Especialista • ERP
+            </span>
+          </div>
+        </div>
       </div>
     </aside>
   );
 }
-

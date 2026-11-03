@@ -19,10 +19,14 @@ import {
   Clock,
   X,
   Layers,
+  ArrowRight,
+  ShieldCheck,
+  Zap,
 } from 'lucide-react';
 import { enviarPerguntaChat, obterHistoricoChat, listarConversasChat } from '../lib/api';
 import { MensagemChat, FonteConsultada } from '../lib/types';
 import MarkdownRenderer from '../components/MarkdownRenderer';
+import Logo from '../components/Logo';
 
 const STORAGE_KEY = 'docmind_active_chat_v1';
 
@@ -37,10 +41,26 @@ Todas as minhas respostas citam o **manual, capítulo e página de origem**. Com
 };
 
 const perguntasSugeridas = [
-  'Como funciona o processo de importação de notas fiscais no ERP?',
-  'Quais são os campos obrigatórios para cadastrar um título a pagar via API?',
-  'Onde consulto os logs de erro de integração financeira?',
-  'Como parametrizar a alíquota fiscal no módulo de faturamento?',
+  {
+    titulo: 'Contas a Receber & Rateios',
+    prompt: 'Como funciona o rateio de receitas e o preenchimento de centro de custo (F4) no contas a receber?',
+    icone: FileText,
+  },
+  {
+    titulo: 'Desdobro de Títulos',
+    prompt: 'Como realizar o desmembramento ou desdobro de títulos no módulo financeiro?',
+    icone: Sparkles,
+  },
+  {
+    titulo: 'Campos Obrigatórios API',
+    prompt: 'Quais são os campos obrigatórios para cadastrar um título financeiro via integração?',
+    icone: Zap,
+  },
+  {
+    titulo: 'Cancelamento de Título',
+    prompt: 'Qual é o procedimento para efetuar o cancelamento de um título cadastrado?',
+    icone: HelpCircle,
+  },
 ];
 
 export default function PaginaChat() {
@@ -59,6 +79,7 @@ export default function PaginaChat() {
   const [carregandoHistorico, setCarregandoHistorico] = useState(false);
 
   const finalMensagensRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // 1. Restaura o estado da sessão anterior ao carregar a página (não limpa ao sair!)
   useEffect(() => {
@@ -222,45 +243,45 @@ export default function PaginaChat() {
   }
 
   return (
-    <div className="flex flex-col h-screen max-h-screen">
-      {/* Barra de Filtros, Estado da Conversa e Controles */}
-      <header className="bg-slate-900 border-b border-slate-800 px-6 py-3 flex flex-wrap items-center justify-between gap-4 shrink-0 shadow-sm">
+    <div className="flex flex-col h-screen max-h-screen relative overflow-hidden">
+      {/* Barra de Filtros, Estado da Conversa e Controles (Glass Header) */}
+      <header className="glass-panel px-6 py-3 flex flex-wrap items-center justify-between gap-4 shrink-0 shadow-sm z-20">
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 text-sm text-slate-300 font-medium">
-            <SlidersHorizontal className="w-4 h-4 text-blue-400" />
-            <span>Contexto ERP:</span>
+          <div className="flex items-center gap-2 text-xs text-slate-300 font-semibold tracking-wide uppercase font-mono">
+            <SlidersHorizontal className="w-3.5 h-3.5 text-cyan-400" />
+            <span>Filtros ERP:</span>
           </div>
 
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1.5 bg-slate-800/80 px-2.5 py-1 rounded-md border border-slate-700/60 text-xs">
-              <span className="text-slate-400">Sistema:</span>
+            <div className="flex items-center gap-1.5 bg-slate-900/90 px-2.5 py-1 rounded-lg border border-slate-700/60 text-xs">
+              <span className="text-slate-400 font-medium">Sistema:</span>
               <input
                 type="text"
                 value={sistema}
                 onChange={(e) => setSistema(e.target.value)}
-                className="bg-transparent text-white font-medium focus:outline-none w-20"
+                className="bg-transparent text-cyan-300 font-semibold focus:outline-none w-16"
                 placeholder="Ex: Volpe"
               />
             </div>
 
-            <div className="flex items-center gap-1.5 bg-slate-800/80 px-2.5 py-1 rounded-md border border-slate-700/60 text-xs">
-              <span className="text-slate-400">Módulo:</span>
+            <div className="flex items-center gap-1.5 bg-slate-900/90 px-2.5 py-1 rounded-lg border border-slate-700/60 text-xs">
+              <span className="text-slate-400 font-medium">Módulo:</span>
               <input
                 type="text"
                 value={modulo}
                 onChange={(e) => setModulo(e.target.value)}
-                className="bg-transparent text-white font-medium focus:outline-none w-24"
+                className="bg-transparent text-blue-300 font-semibold focus:outline-none w-20"
                 placeholder="Ex: Financeiro"
               />
             </div>
 
-            <div className="flex items-center gap-1.5 bg-slate-800/80 px-2.5 py-1 rounded-md border border-slate-700/60 text-xs">
-              <span className="text-slate-400">Versão:</span>
+            <div className="flex items-center gap-1.5 bg-slate-900/90 px-2.5 py-1 rounded-lg border border-slate-700/60 text-xs">
+              <span className="text-slate-400 font-medium">Versão:</span>
               <input
                 type="text"
                 value={versao}
                 onChange={(e) => setVersao(e.target.value)}
-                className="bg-transparent text-white font-medium focus:outline-none w-16 font-mono"
+                className="bg-transparent text-purple-300 font-semibold focus:outline-none w-14 font-mono"
                 placeholder="Ex: 2026.1"
               />
             </div>
@@ -268,9 +289,9 @@ export default function PaginaChat() {
         </div>
 
         {/* Botões de Controle da Sessão (Novo Chat & Histórico) */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5">
           {conversaId && (
-            <span className="text-[11px] text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full font-mono flex items-center gap-1">
+            <span className="text-[10.5px] text-emerald-400 bg-emerald-500/10 border border-emerald-500/25 px-2.5 py-0.5 rounded-full font-mono font-medium flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
               Sessão Ativa
             </span>
@@ -278,7 +299,7 @@ export default function PaginaChat() {
 
           <button
             onClick={abrirHistorico}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg text-xs font-medium transition-colors border border-slate-700/60"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white rounded-lg text-xs font-medium transition-all border border-slate-700/60"
             title="Ver conversas anteriores salvas no banco"
           >
             <History className="w-3.5 h-3.5 text-blue-400" />
@@ -287,7 +308,7 @@ export default function PaginaChat() {
 
           <button
             onClick={handleNovoChat}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-medium transition-colors shadow-sm"
+            className="flex items-center gap-1.5 px-3.5 py-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-lg text-xs font-semibold transition-all shadow-md shadow-blue-600/20"
             title="Iniciar nova conversa do zero"
           >
             <Plus className="w-3.5 h-3.5" />
@@ -308,19 +329,19 @@ export default function PaginaChat() {
             <div
               className={`rounded-2xl p-5 max-w-[90%] text-sm leading-relaxed transition-all ${
                 msg.papel === 'usuario'
-                  ? 'bg-blue-600 text-white rounded-br-none shadow-md shadow-blue-600/15'
-                  : 'bg-slate-900 border border-slate-800/90 text-slate-200 rounded-bl-none shadow-lg'
+                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-br-none shadow-lg shadow-blue-600/15'
+                  : 'glass-panel text-slate-200 rounded-bl-none shadow-xl border border-slate-800/90'
               }`}
             >
               {/* Cabeçalho da Mensagem */}
               <div className="flex items-center gap-2 mb-3 pb-2 border-b border-slate-800/60 text-[11px]">
                 {msg.papel === 'assistente' ? (
                   <>
-                    <div className="p-1 rounded-md bg-blue-500/10 text-blue-400 border border-blue-500/20">
-                      <Sparkles className="w-3.5 h-3.5" />
+                    <div className="w-5 h-5 rounded-md bg-blue-500/10 flex items-center justify-center border border-blue-500/20">
+                      <Logo tamanho="sm" comTexto={false} />
                     </div>
-                    <span className="font-semibold text-blue-300">DocMind AI</span>
-                    <span className="text-[10px] bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded font-mono">
+                    <span className="font-bold text-white tracking-tight">DocMind AI</span>
+                    <span className="text-[10px] bg-slate-800 text-cyan-300 border border-cyan-500/20 px-1.5 py-0.2 rounded font-mono">
                       RAG Fundamentado
                     </span>
                   </>
@@ -337,11 +358,11 @@ export default function PaginaChat() {
 
               {/* Caixa de Fontes e Citações Recuperadas */}
               {msg.fontes && msg.fontes.length > 0 && (
-                <div className="mt-5 pt-3.5 border-t border-slate-800/90 space-y-2.5">
+                <div className="mt-5 pt-3.5 border-t border-slate-800/80 space-y-2.5">
                   <div className="text-xs font-semibold text-emerald-400 flex items-center justify-between">
                     <span className="flex items-center gap-1.5">
                       <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                      Evidências Documentais Recuperadas ({msg.fontes.length}):
+                      Evidências Documentais Verificadas ({msg.fontes.length}):
                     </span>
                     <span className="text-[10px] text-slate-400 font-mono font-normal">
                       pgvector cosine similarity
@@ -357,12 +378,12 @@ export default function PaginaChat() {
                       return (
                         <div
                           key={idx}
-                          className="bg-slate-950/70 p-3 rounded-xl border border-slate-800 text-xs space-y-1.5 hover:border-slate-700/80 transition-colors"
+                          className="bg-slate-950/70 p-3 rounded-xl border border-slate-800 text-xs space-y-2 hover:border-slate-700/80 transition-all"
                         >
                           <div className="flex items-center justify-between text-slate-300">
                             <span className="flex items-center gap-1.5 font-medium text-blue-300">
                               <BookOpen className="w-3.5 h-3.5 text-blue-400 shrink-0" />
-                              <span className="truncate max-w-[280px]">{fonte.tituloDocumento}</span>
+                              <span className="truncate max-w-[280px] font-semibold">{fonte.tituloDocumento}</span>
                               {fonte.tituloCapitulo && (
                                 <span className="text-purple-300 font-normal truncate max-w-[180px]">
                                   • {fonte.tituloCapitulo}
@@ -371,19 +392,33 @@ export default function PaginaChat() {
                             </span>
 
                             <div className="flex items-center gap-2 shrink-0">
-                              <span
-                                className={`px-2 py-0.5 rounded text-[10px] font-mono font-semibold ${
-                                  percentualSimilaridade >= 70
-                                    ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                                    : percentualSimilaridade >= 40
-                                    ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
-                                    : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                                }`}
-                                title="Similaridade Semântica Cosseno"
-                              >
-                                {percentualSimilaridade}% match
-                              </span>
-                              <span className="bg-slate-800 px-2 py-0.5 rounded text-[10px] text-slate-400 font-mono">
+                              <div className="flex items-center gap-1 bg-slate-900 px-2 py-0.5 rounded-full border border-slate-800">
+                                <div className="w-8 h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                                  <div
+                                    className={`h-full rounded-full ${
+                                      percentualSimilaridade >= 70
+                                        ? 'bg-emerald-400'
+                                        : percentualSimilaridade >= 40
+                                        ? 'bg-blue-400'
+                                        : 'bg-amber-400'
+                                    }`}
+                                    style={{ width: `${percentualSimilaridade}%` }}
+                                  />
+                                </div>
+                                <span
+                                  className={`text-[10px] font-mono font-semibold ${
+                                    percentualSimilaridade >= 70
+                                      ? 'text-emerald-400'
+                                      : percentualSimilaridade >= 40
+                                      ? 'text-blue-400'
+                                      : 'text-amber-400'
+                                  }`}
+                                >
+                                  {percentualSimilaridade}%
+                                </span>
+                              </div>
+
+                              <span className="bg-slate-800 px-2 py-0.5 rounded text-[10px] text-slate-300 font-mono font-medium">
                                 Pág. {fonte.numeroPagina || '1'}
                               </span>
                             </div>
@@ -397,10 +432,10 @@ export default function PaginaChat() {
                             "{fonte.trecho}"
                           </p>
 
-                          <div className="flex items-center justify-between pt-1">
+                          <div className="flex items-center justify-between pt-1 text-[10px] text-slate-500">
                             <button
                               onClick={() => setFonteExpandidaIdx(estaExpandida ? null : idFonte)}
-                              className="text-[11px] text-blue-400 hover:text-blue-300 flex items-center gap-0.5 font-medium"
+                              className="text-[11px] text-cyan-400 hover:text-cyan-300 flex items-center gap-0.5 font-medium"
                             >
                               {estaExpandida ? (
                                 <>
@@ -414,7 +449,7 @@ export default function PaginaChat() {
                                 </>
                               )}
                             </button>
-                            <span className="text-[10px] text-slate-500">
+                            <span>
                               {fonte.sistema} • {fonte.modulo} ({fonte.versao})
                             </span>
                           </div>
@@ -429,11 +464,11 @@ export default function PaginaChat() {
         ))}
 
         {carregando && (
-          <div className="flex items-center gap-3 text-slate-300 text-xs max-w-4xl mx-auto py-3 px-4 bg-slate-900/60 border border-slate-800 rounded-xl">
-            <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin shrink-0" />
+          <div className="flex items-center gap-3 text-slate-300 text-xs max-w-4xl mx-auto py-3.5 px-4 glass-panel rounded-2xl border border-blue-500/30 glow-blue animate-pulse">
+            <div className="w-4 h-4 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin shrink-0" />
             <div className="flex flex-col">
-              <span className="font-medium text-blue-300">Consultando pgvector e sintetizando resposta...</span>
-              <span className="text-[11px] text-slate-500">Recuperando trechos documentais de alta similaridade</span>
+              <span className="font-semibold text-cyan-300">Consultando pgvector e sintetizando resposta...</span>
+              <span className="text-[11px] text-slate-400">Recuperando trechos documentais de alta similaridade com citação de página</span>
             </div>
           </div>
         )}
@@ -441,48 +476,67 @@ export default function PaginaChat() {
         <div ref={finalMensagensRef} />
       </div>
 
-      {/* Sugestões de Perguntas Rápidas */}
+      {/* Sugestões de Perguntas Rápidas em formato de Cards */}
       {mensagens.length <= 2 && (
-        <div className="px-6 pb-2 max-w-4xl mx-auto w-full">
-          <p className="text-[11px] text-slate-400 mb-2 flex items-center gap-1">
-            <HelpCircle className="w-3.5 h-3.5 text-slate-500" />
-            Perguntas frequentes para testar:
+        <div className="px-6 pb-3 max-w-4xl mx-auto w-full z-10">
+          <p className="text-[11px] text-slate-400 mb-2.5 flex items-center gap-1.5 font-semibold">
+            <Sparkles className="w-3.5 h-3.5 text-blue-400" />
+            Sugestões frequentes para consultar os manuais:
           </p>
-          <div className="flex flex-wrap gap-2">
-            {perguntasSugeridas.map((sugestao, i) => (
-              <button
-                key={i}
-                onClick={() => handleEnviar(sugestao)}
-                className="text-xs bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 px-3 py-1.5 rounded-full transition-colors"
-              >
-                {sugestao}
-              </button>
-            ))}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            {perguntasSugeridas.map((sugestao, i) => {
+              const Icone = sugestao.icone;
+              return (
+                <button
+                  key={i}
+                  onClick={() => handleEnviar(sugestao.prompt)}
+                  className="text-left p-3 rounded-xl glass-panel hover:bg-slate-900/80 text-slate-300 border border-slate-800 hover:border-blue-500/40 transition-all flex items-start gap-2.5 group"
+                >
+                  <div className="p-1.5 rounded-lg bg-blue-500/10 text-cyan-400 border border-cyan-500/20 group-hover:scale-110 transition-transform shrink-0">
+                    <Icone className="w-3.5 h-3.5" />
+                  </div>
+                  <div className="min-w-0">
+                    <span className="text-xs font-semibold text-white block group-hover:text-cyan-300 transition-colors">
+                      {sugestao.titulo}
+                    </span>
+                    <span className="text-[11px] text-slate-400 line-clamp-1 mt-0.5">
+                      {sugestao.prompt}
+                    </span>
+                  </div>
+                </button>
+              );
+            })}
           </div>
         </div>
       )}
 
-      {/* Barra de Entrada / Envio */}
-      <footer className="p-4 bg-slate-900 border-t border-slate-800 shrink-0">
+      {/* Barra de Entrada / Envio (Floating Glass Footer) */}
+      <footer className="p-4 glass-panel border-t border-slate-800/80 shrink-0 z-20">
         <form
           onSubmit={(e) => {
             e.preventDefault();
             handleEnviar();
           }}
-          className="max-w-4xl mx-auto flex items-center gap-2"
+          className="max-w-4xl mx-auto flex items-center gap-3"
         >
-          <input
-            type="text"
-            value={pergunta}
-            onChange={(e) => setPergunta(e.target.value)}
-            placeholder="Faça uma pergunta sobre o ERP, regras de negócio ou procedimentos operacionais..."
-            className="flex-1 bg-slate-950 text-white placeholder-slate-500 px-4 py-3 rounded-xl border border-slate-800 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm transition-all"
-            disabled={carregando}
-          />
+          <div className="relative flex-1">
+            <input
+              type="text"
+              value={pergunta}
+              onChange={(e) => setPergunta(e.target.value)}
+              placeholder="Faça uma pergunta técnica sobre o ERP (ex: atalhos, rateios, APIs, regras de tela)..."
+              className="w-full bg-slate-950/90 text-white placeholder-slate-500 px-4 py-3.5 rounded-xl border border-slate-800 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 text-sm transition-all shadow-inner"
+              disabled={carregando}
+            />
+            <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-500 font-mono hidden sm:inline">
+              Enter ↵
+            </span>
+          </div>
+
           <button
             type="submit"
             disabled={!pergunta.trim() || carregando}
-            className="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:hover:bg-blue-600 text-white p-3 rounded-xl transition-colors shrink-0 shadow-md shadow-blue-600/20"
+            className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 disabled:opacity-40 disabled:hover:from-blue-600 disabled:hover:to-indigo-600 text-white p-3.5 rounded-xl transition-all shrink-0 shadow-lg shadow-blue-600/20 active:scale-95"
             title="Enviar mensagem"
           >
             <Send className="w-4 h-4" />
@@ -492,7 +546,7 @@ export default function PaginaChat() {
 
       {/* MODAL DE HISTÓRICO DE SESSÕES ANTERIORES */}
       {historicoModalAberto && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
           <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg max-h-[80vh] flex flex-col shadow-2xl overflow-hidden">
             <div className="flex items-center justify-between px-5 py-4 bg-slate-950 border-b border-slate-800">
               <div className="flex items-center gap-2">

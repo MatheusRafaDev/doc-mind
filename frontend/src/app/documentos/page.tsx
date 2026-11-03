@@ -155,21 +155,21 @@ export default function PaginaDocumentos() {
       </div>
 
       {/* Formulário de Importação (Arquivo ou Colar Markdown) */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-sm">
+      <div className="glass-panel rounded-2xl p-6 shadow-xl border border-slate-800">
         <div className="flex flex-wrap items-center justify-between gap-3 mb-5 pb-3 border-b border-slate-800/80">
           <h2 className="text-sm font-semibold text-white flex items-center gap-2">
-            <Upload className="w-4 h-4 text-blue-400" />
+            <Upload className="w-4 h-4 text-cyan-400" />
             Importar Novo Manual ou Especificação Técnica
           </h2>
 
           {/* Alternador de Modo: Upload de Arquivo vs Colar Markdown */}
-          <div className="bg-slate-950 border border-slate-800 p-0.5 rounded-lg flex text-xs">
+          <div className="bg-slate-950 border border-slate-800 p-0.5 rounded-xl flex text-xs">
             <button
               type="button"
               onClick={() => setModoEntrada('arquivo')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md transition-colors ${
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg transition-all ${
                 modoEntrada === 'arquivo'
-                  ? 'bg-blue-600 text-white font-medium shadow-sm'
+                  ? 'bg-blue-600 text-white font-semibold shadow-md shadow-blue-600/20'
                   : 'text-slate-400 hover:text-white'
               }`}
             >
@@ -179,9 +179,9 @@ export default function PaginaDocumentos() {
             <button
               type="button"
               onClick={() => setModoEntrada('texto')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md transition-colors ${
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg transition-all ${
                 modoEntrada === 'texto'
-                  ? 'bg-purple-600 text-white font-medium shadow-sm'
+                  ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-semibold shadow-md shadow-purple-600/20'
                   : 'text-slate-400 hover:text-white'
               }`}
             >
@@ -388,7 +388,7 @@ export default function PaginaDocumentos() {
               <div
                 key={doc.id}
                 onClick={() => setDocumentoIdZoom(doc.id)}
-                className="bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-col justify-between space-y-3 hover:border-blue-500/50 hover:bg-slate-900/90 transition-all cursor-pointer group shadow-sm hover:shadow-blue-500/5"
+                className="glass-panel rounded-2xl p-4 flex flex-col justify-between space-y-3 hover:border-cyan-500/50 hover:bg-slate-900/90 transition-all cursor-pointer group shadow-md hover:shadow-cyan-500/10 hover:-translate-y-0.5"
               >
                 <div>
                   <div className="flex items-start justify-between gap-2">
